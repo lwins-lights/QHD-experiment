@@ -78,25 +78,6 @@ void hadamard_product(comp *A, comp *B, comp *C, int size) {
     }
 }
 
-void load_2d_potential_from_file(double *V, const int N, const string potential_fn) {
-
-    FILE *fin;
-    double temp;
-
-    fin = fopen(potential_fn.c_str(), "r");
-    if (fin == NULL) {
-        cout << "Potential file" << "\"" << potential_fn << "\"" << "not found.";
-        exit(EXIT_FAILURE);
-    }
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < N; j++) {
-            fscanf(fin, "%lf", &temp);
-            V[i * N + j] = temp;
-        }
-    }
-    fclose(fin);
-}
-
 void load_potential_to_array(double *V, const int len, const double L, const int dim) {
     
     int i;
@@ -265,11 +246,6 @@ void pseudospec(const int dim, const int len, const double L, const double T,
         /* [DEBUG] */
         double expected_value2 = expected_potential(psi, V, size);
         printf("[%d / %d] expected = %.8lf\n", step, num_steps, expected_value2);
-        //printf("Psi = [");
-        //for (i = 0; i < size; i++) {
-        //    printf("%.3lf+%.3lfi ", psi[i].real(), psi[i].imag());
-        //}
-        //printf("]\n");
     }
 
     /* timing */
@@ -298,8 +274,6 @@ int main(int argc, char **argv)
 
     printf("L=%f, len=%d\n", L, len);
     printf("T=%f, dt=%f\n", T, dt);
-    //const char* potential_fn = argv[6];
-    //cout << "Potentials filename: " << potential_fn << endl;
 
     const double stepsize = 2 * L / len;
     printf("stepsize=%f\n", stepsize);
@@ -308,7 +282,6 @@ int main(int argc, char **argv)
 
     comp psi[size];
 
-    //load_2d_potential_from_file(V, len, potential_fn);
     initialize_psi(psi, size);
     pseudospec(dim, len, L, T, dt, V, psi);
     
