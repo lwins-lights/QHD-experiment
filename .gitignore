@@ -12,3 +12,8 @@
 # Ignore the result folder
 
 result/
+
+# Ignore c++ intermediates
+
+*.o
+*.gch
