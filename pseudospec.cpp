@@ -161,8 +161,6 @@ double expected_potential(const comp *psi, const double *V, int size) {
         pot += temp * V[i];
     }
 
-    //printf("[DEBUG] %lf/%lf\n", pot, prob);
-
     return pot / prob;
 }
 
@@ -172,6 +170,7 @@ void pseudospec(const int dim, const int len, const double L, const double T,
         pseudospectral solver for time-dependent Schrodinger equation
             H(t) = t_dep_1(t)*(-1/2*\nabla^2) + t_dep_2(t)*V(x)
         defined on [-L,L]^dim discretized into len^dim hypercube nodes
+        refer to Section C.2.1 in https://arxiv.org/pdf/2303.01471v1.pdf
     */
 
     const int size = pow(len, dim);
@@ -187,8 +186,6 @@ void pseudospec(const int dim, const int len, const double L, const double T,
     for (i = 0; i < dim; i++) {
         n[i] = len;
     }
-
-    //cout << dim << " " << len << " " << size;
 
     /* load Fourier-tranformed kinetic operator */
     initialize_kinetic_operator(kop, dim, len, L);

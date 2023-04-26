@@ -1,4 +1,4 @@
-all: pseudospec
+all: pseudospec nagd
 
 CXX := g++
 CXXFLAGS := -O3 --std=c++17
@@ -12,5 +12,11 @@ pseudospec.o: pseudospec.cpp
 pseudospec: pseudospec.o potential.o
 	$(CXX) $(CXXFLAGS) -o pseudospec $^ -fopenmp -lfftw3_omp -lfftw3 -lm
 
+nagd.o: nagd.cpp
+	$(CXX) $(CXXFLAGS) -c $^ -fopenmp
+
+nagd: nagd.o potential.o
+	$(CXX) $(CXXFLAGS) -o nagd $^ -fopenmp -lm
+
 clean:
-	rm -f pseudospec pseudospec.o potential.hpp.gch potential.o 
+	rm -f pseudospec pseudospec.o nagd nagd.o potential.hpp.gch potential.o

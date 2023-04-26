@@ -10,6 +10,6 @@ void get_potential_params(double &var_L, int &var_dim) {
     var_dim = dim;
 }
 
-double get_potential(double *x) {
+double get_potential(const double *x) {
     return 4 * (x[0] * x[0] + x[1] * x[1]);
 }
