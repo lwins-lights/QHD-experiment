@@ -3,8 +3,25 @@
 #include <math.h>
 #include <omp.h>
 #include "potential.hpp"
+#include <cnpy.h>
 
 using namespace std;
+using namespace cnpy;
+
+const int bar_width = 70;
+void print_prog_bar(int prog) {
+    const int pos = prog * bar_width / 100;
+    string bar;
+
+    bar = "[";
+    for (int i = 0; i < bar_width; ++i) {
+        if (i < pos) bar += "=";
+        else if (i == pos) bar += ">";
+        else bar += " ";
+    }
+    cout << bar << "] " << prog << " %\r";
+    cout.flush();
+}
 
 void vec_minus(const double *a, const double *b, double *c, const int size) {
     /*
@@ -105,9 +122,11 @@ void nagd(const int dim, const int len, const double L, const double T,
 
     const int num = pow(len, dim);
     const int num_steps = T / dt;
+    int prog, prog_prev;
     int v[dim];
     double x[num][dim], y[num][dim], x_new[num][dim], y_new[num][dim], temp[dim];
     double expected_pot, time_st, time_ed;
+    double pot[num_steps];
     
     /* run NAGD with len^dim different initial values in the hypercube */
     for (int id = 0; id < num; id++) {
@@ -117,33 +136,25 @@ void nagd(const int dim, const int len, const double L, const double T,
             /* map [0, len) to [-L, L) */
             x[id][j] = y[id][j] = (double) v[j] * 2 * L / len - L;
         }
-        //cout << x[id][0] << " " << x[id][1] << endl;
     }
 
     /* timing */
     time_st = omp_get_wtime();
 
     /* main loop */
-    for (int step = 1; step <= num_steps; step++) {
+    for (int step = 0; step < num_steps; step++) {
         expected_pot = 0;
 
         for (int id = 0; id < num; id++) {
             /* x' = y - dt \nabla V(y) */
             grad(dim, stepsize, L, y[id], temp);
-            //if (id == 0) cout << "temp:" << temp[0] << " " << temp[1] << endl;
             scalar_mul(temp, dt, dim);
-            //if (id == 0) cout << "temp2:" << temp[0] << " " << temp[1] << endl;
             vec_minus(y[id], temp, x_new[id], dim);
-            //if (id == 0) cout << "y:" << y[id][0] << " " << y[id][1] << endl;
-            //if (id == 0) cout << "x_new:" << x_new[id][0] << " " << x_new[id][1] << endl;
 
             /* y' = x' + (k-1)/(k+2)*(x' - x) */
             vec_minus(x_new[id], x[id], temp, dim);
-            //if (id == 0) cout << "temp3:" << temp[0] << " " << temp[1] << endl;
             scalar_mul(temp, (step - 1) / (step + 2), dim);
-            //if (id == 0) cout << "temp4:" << temp[0] << " " << temp[1] << endl;
             vec_plus(x_new[id], temp, y_new[id], dim);
-            //if (id == 0) cout << "y_new:" << y_new[id][0] << " " << y_new[id][1] << endl;
 
             /* update */
             vec_copy(x_new[id], x[id], dim);
@@ -151,14 +162,25 @@ void nagd(const int dim, const int len, const double L, const double T,
 
             expected_pot += get_potential(y[id]) / num;
         }
-        /* [DEBUG] */
-        printf("[%d / %d] expected = %.8lf\n", step, num_steps, expected_pot);
+        /* print progress bar */
+        prog = (step + 1) * 100 / num_steps;
+        if (prog != prog_prev) {
+            print_prog_bar(prog);
+            prog_prev = prog;
+        } 
+
+        pot[step] = expected_pot;
     }
 
     /* timing */
     time_ed = omp_get_wtime();
     printf("\n");
-    printf("Pseudospectral integrator runtime = %.5f s\n", time_ed - time_st);
+    printf("NAGD simulator runtime = %.5f s\n", time_ed - time_st);
+
+    /* save results */
+    npz_save("../result/nagd.npz", "expected_potential", pot, {(unsigned int) num_steps}, "w");
+    npz_save("../result/pseudospec.npz", "T", &T, {1}, "a");
+    npz_save("../result/pseudospec.npz", "dt", &dt, {1}, "a");
 }
 
 int main(int argc, char **argv)

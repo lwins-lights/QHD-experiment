@@ -13,6 +13,10 @@
 
 result/
 
+# Ignore the copied potential.cpp
+
+simulator/potential.cpp
+
 # Ignore c++ intermediates
 
 *.o

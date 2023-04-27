@@ -4,14 +4,31 @@
 #include <fftw3.h>
 #include <omp.h>
 #include "potential.hpp"
+#include <cnpy.h>
 
 using namespace std;
+using namespace cnpy;
 
 /* Type "comp" and "fftw_complex" will be compatible */
 typedef complex<double> comp;
 
 /* imaginary unit */
 const comp iu = comp(0, 1);
+
+const int bar_width = 70;
+void print_prog_bar(int prog) {
+    const int pos = prog * bar_width / 100;
+    string bar;
+
+    bar = "[";
+    for (int i = 0; i < bar_width; ++i) {
+        if (i < pos) bar += "=";
+        else if (i == pos) bar += ">";
+        else bar += " ";
+    }
+    cout << bar << "] " << prog << " %\r";
+    cout.flush();
+}
 
 int coord_to_int(const int *x, const int dim, const int len) {
     /*
@@ -177,9 +194,10 @@ void pseudospec(const int dim, const int len, const double L, const double T,
     const int num_steps = T / dt;
 
     int n[dim];
-    int i;
+    int i, prog, prog_prev;
     comp kop[size], u[size], psi_new[size], temp[size];
     double time_st, time_ed, t;
+    double pot[num_steps];
     fftw_plan plan_ft, plan_ift;
 
     /* n for fftw later */
@@ -209,7 +227,8 @@ void pseudospec(const int dim, const int len, const double L, const double T,
         term and the kinetic term
     */
     t = 0;
-    for (int step = 1; step <= num_steps; step++) {
+    prog_prev = -1;
+    for (int step = 0; step < num_steps; step++) {
 
         /* potential term first */
 
@@ -238,17 +257,27 @@ void pseudospec(const int dim, const int len, const double L, const double T,
         }
 
         /* update current time */
-        t = step * dt;
+        t = (step + 1) * dt;
 
-        /* [DEBUG] */
-        double expected_value2 = expected_potential(psi, V, size);
-        printf("[%d / %d] expected = %.8lf\n", step, num_steps, expected_value2);
+        /* print progress bar */
+        prog = (step + 1) * 100 / num_steps;
+        if (prog != prog_prev) {
+            print_prog_bar(prog);
+            prog_prev = prog;
+        } 
+
+        pot[step] = expected_potential(psi, V, size);
     }
 
     /* timing */
     time_ed = omp_get_wtime();
     printf("\n");
     printf("Pseudospectral integrator runtime = %.5f s\n", time_ed - time_st);
+
+    /* save results */
+    npz_save("../result/pseudospec.npz", "expected_potential", pot, {(unsigned int) num_steps}, "w");
+    npz_save("../result/pseudospec.npz", "T", &T, {1}, "a");
+    npz_save("../result/pseudospec.npz", "dt", &dt, {1}, "a");
 }
 
 int main(int argc, char **argv)
