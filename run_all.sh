@@ -4,6 +4,7 @@ tot=$2;
 dt=$3;
 fcp=$4;
 
+mkdir -p result
 cp $fcp simulator/potential.cpp
 cd simulator
 make
