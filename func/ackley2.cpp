@@ -13,5 +13,5 @@ void get_potential_params(double &var_L, int &var_dim) {
 double get_potential(const double *x) {
     double x1 = x[0] * 64;
     double x2 = x[1] * 64;
-    return -200 / 64 * exp(-0.2*sqrt(x1*x1+x2*x2));
+    return -200 / 64 * exp(-0.2*sqrt(x1*x1+x2*x2)) + 200 / 64;
 }
