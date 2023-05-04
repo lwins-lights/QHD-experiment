@@ -43,13 +43,24 @@ void vec_plus(const double *a, const double *b, double *c, const int size) {
     }
 }
 
-void vec_copy(const double *a, double *b, const int size) {
+void vec_copy(const double *a, double *b, const int size, const double L) {
     /*
         b := a
+        coordinates circular on [-L, L)
     */
+
+    double temp;
 
     for (int i = 0; i < size; i++) {
         b[i] = a[i];
+
+        /* map [-L, L) to [0, 1) */
+        temp = (b[i] + L) / 2 / L;
+
+        temp = temp - floor(temp);
+
+        /* map back */
+        b[i] = temp * 2 * L - L;
     }
 }
 
@@ -157,8 +168,8 @@ void nagd(const int dim, const int len, const double L, const double T,
             vec_plus(x_new[id], temp, y_new[id], dim);
 
             /* update */
-            vec_copy(x_new[id], x[id], dim);
-            vec_copy(y_new[id], y[id], dim);
+            vec_copy(x_new[id], x[id], dim, L);
+            vec_copy(y_new[id], y[id], dim, L);
 
             expected_pot += get_potential(y[id]) / num;
         }
@@ -170,6 +181,7 @@ void nagd(const int dim, const int len, const double L, const double T,
         } 
 
         pot[step] = expected_pot;
+        //if (step < 5) cout << "DEBUG pot = " << expected_pot << endl;
     }
 
     /* timing */
