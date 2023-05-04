@@ -156,6 +156,7 @@ void nagd(const int dim, const int len, const double L, const double T,
     for (int step = 0; step < num_steps; step++) {
         expected_pot = 0;
 
+        #pragma omp parallel for private(temp) reduction(+: expected_pot)
         for (int id = 0; id < num; id++) {
             /* x' = y - dt \nabla V(y) */
             grad(dim, stepsize, L, y[id], temp);
