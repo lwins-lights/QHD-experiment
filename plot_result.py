@@ -14,8 +14,8 @@ dt = qhd_res['dt']
 x = np.arange(0, T, dt)
   
 # plotting the points 
-plt.plot(x, y_qhd, label="QHD")
-plt.plot(x, y_nagd, label="NAGD")
+plt.plot(x, y_qhd, label="QHD*" + str(qhd_res['par'][0]))
+plt.plot(x, y_nagd, label="NAGD*" + str(nagd_res['par'][0]))
   
 plt.xlabel('time')
 plt.ylabel('expectation')

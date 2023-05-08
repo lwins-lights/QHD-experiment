@@ -1,4 +1,6 @@
 #include <iostream>
+#include <execution>
+#include <algorithm>
 #include <complex>
 #include <math.h>
 #include <omp.h>
@@ -124,8 +126,30 @@ void grad(const int dim, const double stepsize, const double L,
     }
 }
 
+double compute_potential(const double *pot, const int num, const int par) {
+    double sorted_pot[num];
+    double ret;
+
+    #pragma omp parallel for
+    for (int i = 0; i < num; i++) {
+        sorted_pot[i] = pot[i];
+    }
+
+    /* parallelized sort; unnecessary if par = 1 */
+    if (par > 1) {
+        sort(execution::par_unseq, sorted_pot, sorted_pot + num);
+    }
+    ret = 0;
+
+    #pragma omp parallel for reduction(+: ret)
+    for (int i = 0; i < num; i++) {
+        ret += sorted_pot[i] * (pow((double) (num - i) / num, par) - pow((double) (num - i - 1) / num, par));
+    }
+    return ret;
+}
+
 void nagd(const int dim, const int len, const double L, const double T, 
-          const double dt, const double stepsize) {
+          const double dt, const double stepsize, const int par) {
     /*
         Nesterov’s accelerated gradient descent
         refer to Section C.3.1 in https://arxiv.org/pdf/2303.01471v1.pdf
@@ -138,6 +162,7 @@ void nagd(const int dim, const int len, const double L, const double T,
     double x[num][dim], y[num][dim], x_new[num][dim], y_new[num][dim], temp[dim];
     double expected_pot, time_st, time_ed;
     double pot[num_steps];
+    double cur_pot[num];
     
     /* run NAGD with len^dim different initial values in the hypercube */
     for (int id = 0; id < num; id++) {
@@ -158,6 +183,9 @@ void nagd(const int dim, const int len, const double L, const double T,
 
         #pragma omp parallel for private(temp) reduction(+: expected_pot)
         for (int id = 0; id < num; id++) {
+            /* evaluate potential */
+            cur_pot[id] = get_potential(y[id]);
+
             /* x' = y - dt \nabla V(y) */
             grad(dim, stepsize, L, y[id], temp);
             scalar_mul(temp, dt, dim);
@@ -171,9 +199,8 @@ void nagd(const int dim, const int len, const double L, const double T,
             /* update */
             vec_copy(x_new[id], x[id], dim, L);
             vec_copy(y_new[id], y[id], dim, L);
-
-            expected_pot += get_potential(y[id]) / num;
         }
+
         /* print progress bar */
         prog = (step + 1) * 100 / num_steps;
         if (prog != prog_prev) {
@@ -181,8 +208,7 @@ void nagd(const int dim, const int len, const double L, const double T,
             prog_prev = prog;
         } 
 
-        pot[step] = expected_pot;
-        //if (step < 5) cout << "DEBUG pot = " << expected_pot << endl;
+        pot[step] = compute_potential(cur_pot, num, par);
     }
 
     /* timing */
@@ -192,19 +218,21 @@ void nagd(const int dim, const int len, const double L, const double T,
 
     /* save results */
     npz_save("../result/nagd.npz", "expected_potential", pot, {(unsigned int) num_steps}, "w");
-    npz_save("../result/pseudospec.npz", "T", &T, {1}, "a");
-    npz_save("../result/pseudospec.npz", "dt", &dt, {1}, "a");
+    npz_save("../result/nagd.npz", "T", &T, {1}, "a");
+    npz_save("../result/nagd.npz", "dt", &dt, {1}, "a");
+    npz_save("../result/nagd.npz", "par", &par, {1}, "a");
 }
 
 int main(int argc, char **argv)
 {
-    if (argc != 4) {
-        perror("Expected arguments: ./nagd <len> <T> <dt>");
+    if (argc != 5) {
+        perror("Expected arguments: ./nagd <len> <T> <dt> <par>");
         exit(EXIT_FAILURE);
     }
     const int len = stoi(argv[1]);
     const double T = stod(argv[2]);
     const double dt = stod(argv[3]);
+    const int par = stoi(argv[4]);
 
     double L;
     int dim;
@@ -217,5 +245,5 @@ int main(int argc, char **argv)
     printf("Max threads: %d\n", omp_get_num_procs());
     printf("Threads: %d\n", omp_get_max_threads());
 
-    nagd(dim, len, L, T, dt, stepsize);
+    nagd(dim, len, L, T, dt, stepsize, par);
 }

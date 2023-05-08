@@ -1,4 +1,6 @@
 #include <iostream>
+#include <algorithm>
+#include <execution>
 #include <complex>
 #include <math.h>
 #include <fftw3.h>
@@ -159,30 +161,52 @@ void initialize_kinetic_operator(comp *op, const int dim, const int len, const d
     }
 }
 
-double expected_potential(const comp *psi, const double *V, int size) {
+double expected_potential(const comp *psi, const double *V, const int size,
+                          const int par) {
     /*
         compute the expected potential with wave function psi
-        psi need not be normalized
         psi and V are discretized on {0,1,...,size-1}
     */
 
-    int i;
-    double pot, prob, temp;
-    
-    pot = prob = 0;
+    struct pp_pair {
+        double prob, pot;
+    };
 
-    #pragma omp parallel for private(i, temp) reduction(+: prob, pot)
-    for (i = 0; i < size; i++) {
-        temp = (psi[i] * conj(psi[i])).real();
-        prob += temp;
-        pot += temp * V[i];
+    pp_pair pp[size];
+    double ret, tot_prob, tot_prob_new;
+
+    #pragma omp parallel for
+    for (int i = 0; i < size; i++) {
+        pp[i].prob = (psi[i] * conj(psi[i])).real();
+        pp[i].pot = V[i];
     }
 
-    return pot / prob;
+    /* parallelized sort; unnecessary if par = 1 */
+    if (par > 1) {
+        sort(execution::par_unseq, pp, pp + size, 
+             [](pp_pair a, pp_pair b) {return a.pot > b.pot;});
+    }
+
+    /* accumulate the result; this CANNOT be directly parallelized if par > 1 */
+    ret = tot_prob = 0;
+    if (par > 1) {
+        for (int i = 0; i < size; i++) {
+            tot_prob_new = tot_prob + pp[i].prob;
+            ret += pp[i].pot * (pow(tot_prob_new, par) - pow(tot_prob, par));
+            tot_prob = tot_prob_new;
+        }
+    } else {
+        #pragma omp parallel for reduction(+: ret)
+        for (int i = 0; i < size; i++) {
+            ret += pp[i].pot * pp[i].prob;
+        }
+    }
+
+    return ret;
 }
 
 void pseudospec(const int dim, const int len, const double L, const double T, 
-                const double dt, const double *V, comp *psi) {
+                const double dt, const double *V, comp *psi, const int par) {
     /*
         pseudospectral solver for time-dependent Schrodinger equation
             H(t) = t_dep_1(t)*(-1/2*\nabla^2) + t_dep_2(t)*V(x)
@@ -196,7 +220,7 @@ void pseudospec(const int dim, const int len, const double L, const double T,
     int n[dim];
     int i, prog, prog_prev;
     comp kop[size], u[size], psi_new[size], temp[size];
-    double time_st, time_ed, t;
+    double time_st, time_ed, t, temp_tot;
     double pot[num_steps];
     fftw_plan plan_ft, plan_ift;
 
@@ -250,10 +274,17 @@ void pseudospec(const int dim, const int len, const double L, const double T,
         hadamard_product(temp, u, u, size);
         fftw_execute(plan_ift);
 
-        /* update psi; we do not strictly normalize psi for now */
+        /* update psi and normalize */
+        temp_tot = 0;
+
+        #pragma omp parallel for private(i) reduction(+: temp_tot)
+        for (i = 0; i < size; i++) {
+            temp_tot += (psi_new[i] * conj(psi_new[i])).real();
+        }
+
         #pragma omp parallel for private(i)
         for (i = 0; i < size; i++) {
-            psi[i] = psi_new[i] / (double) size;
+            psi[i] = psi_new[i] / sqrt(temp_tot);
         }
 
         /* update current time */
@@ -266,7 +297,8 @@ void pseudospec(const int dim, const int len, const double L, const double T,
             prog_prev = prog;
         } 
 
-        pot[step] = expected_potential(psi, V, size);
+        pot[step] = expected_potential(psi, V, size, par);
+        //if (step < 5) cout << "D pot=" << pot[step] << endl;
     }
 
     /* timing */
@@ -278,17 +310,19 @@ void pseudospec(const int dim, const int len, const double L, const double T,
     npz_save("../result/pseudospec.npz", "expected_potential", pot, {(unsigned int) num_steps}, "w");
     npz_save("../result/pseudospec.npz", "T", &T, {1}, "a");
     npz_save("../result/pseudospec.npz", "dt", &dt, {1}, "a");
+    npz_save("../result/pseudospec.npz", "par", &par, {1}, "a");
 }
 
 int main(int argc, char **argv)
 {
-    if (argc != 4) {
-        perror("Expected arguments: ./pseudospec <len> <T> <dt>");
+    if (argc != 5) {
+        perror("Expected arguments: ./pseudospec <len> <T> <dt> <par>");
         exit(EXIT_FAILURE);
     }
     const int len = stoi(argv[1]);
     const double T = stod(argv[2]);
     const double dt = stod(argv[3]);
+    const int par = stoi(argv[4]);
 
     double L;
     int dim;
@@ -309,7 +343,7 @@ int main(int argc, char **argv)
     comp psi[size];
 
     initialize_psi(psi, size);
-    pseudospec(dim, len, L, T, dt, V, psi);
+    pseudospec(dim, len, L, T, dt, V, psi, par);
     
     return 0;
 }

@@ -10,13 +10,13 @@ pseudospec.o: pseudospec.cpp
 	$(CXX) $(CXXFLAGS) -c $^ -fopenmp
 
 pseudospec: pseudospec.o potential.o
-	$(CXX) $(CXXFLAGS) -o pseudospec $^ -fopenmp -lfftw3_omp -lfftw3 -lm -lcnpy -lz
+	$(CXX) $(CXXFLAGS) -o pseudospec $^ -fopenmp -lfftw3_omp -lfftw3 -lm -lcnpy -lz -ltbb
 
 nagd.o: nagd.cpp
 	$(CXX) $(CXXFLAGS) -c $^ -fopenmp
 
 nagd: nagd.o potential.o
-	$(CXX) $(CXXFLAGS) -o nagd $^ -fopenmp -lm -lcnpy -lz
+	$(CXX) $(CXXFLAGS) -o nagd $^ -fopenmp -lm -lcnpy -lz -ltbb
 
 clean:
 	rm -f pseudospec pseudospec.o nagd nagd.o potential.hpp.gch potential.o
