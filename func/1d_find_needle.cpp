@@ -15,7 +15,7 @@ void get_potential_params(double &var_L, int &var_dim) {
 }
 
 double get_potential(const double *x) {
-    const int N = 16;
+    const int N = 8;
     /* map [-L, L) to [-\pi, \pi) */
     double z = x[0] / L * M_PI;
 
@@ -27,6 +27,6 @@ double get_potential(const double *x) {
         f *= 2;
     }
 
-    /* make minimum 0 */
-    return f + 2;
+    /* make minimum 0 and scale */
+    return (f + 2) / N;
 }

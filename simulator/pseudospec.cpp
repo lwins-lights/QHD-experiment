@@ -6,6 +6,7 @@
 #include <fftw3.h>
 #include <omp.h>
 #include "potential.hpp"
+#include "config.hpp"
 #include <cnpy.h>
 
 using namespace std;
@@ -205,6 +206,30 @@ double expected_potential(const comp *psi, const double *V, const int size,
     return ret;
 }
 
+double prob_at_minimum(const comp *psi, const double *V, const int size,
+                       const double thr, const int par) {
+    /*
+        compute the probability that the potential is less than thr
+        proability distribution defined by the wave function psi
+        psi and V are discretized on {0,1,...,size-1}
+    */
+
+    double prob;
+    
+    /* compute Pr[result < thr] */
+    prob = 0;
+
+    #pragma omp parallel for reduction(+: prob)
+    for (int i = 0; i < size; i++) {
+        if (V[i] < thr) {
+            prob += (psi[i] * conj(psi[i])).real();
+        }
+    }
+
+    /* convert to Pr[all par results < thr] */
+    return 1 - pow(1 - prob, par);
+}
+
 void pseudospec(const int dim, const int len, const double L, const double T, 
                 const double dt, const double *V, comp *psi, const int par) {
     /*
@@ -220,8 +245,8 @@ void pseudospec(const int dim, const int len, const double L, const double T,
     int n[dim];
     int i, prog, prog_prev;
     comp kop[size], u[size], psi_new[size], temp[size];
-    double time_st, time_ed, t, temp_tot;
-    double pot[num_steps];
+    double time_st, time_ed, t, temp_tot, thr;
+    double pot[num_steps], prob_at_min[num_steps];
     fftw_plan plan_ft, plan_ift;
 
     /* n for fftw later */
@@ -298,7 +323,10 @@ void pseudospec(const int dim, const int len, const double L, const double T,
         } 
 
         pot[step] = expected_potential(psi, V, size, par);
-        //if (step < 5) cout << "D pot=" << pot[step] << endl;
+        if (step == 0) {
+            thr = thr_frac * expected_potential(psi, V, size, 1);
+        }
+        prob_at_min[step] = prob_at_minimum(psi, V, size, thr, par);
     }
 
     /* timing */
@@ -308,9 +336,12 @@ void pseudospec(const int dim, const int len, const double L, const double T,
 
     /* save results */
     npz_save("../result/pseudospec.npz", "expected_potential", pot, {(unsigned int) num_steps}, "w");
+    npz_save("../result/pseudospec.npz", "probability_at_minimum", prob_at_min, {(unsigned int) num_steps}, "a");
     npz_save("../result/pseudospec.npz", "T", &T, {1}, "a");
     npz_save("../result/pseudospec.npz", "dt", &dt, {1}, "a");
     npz_save("../result/pseudospec.npz", "par", &par, {1}, "a");
+    npz_save("../result/pseudospec.npz", "len", &len, {1}, "a");
+    npz_save("../result/pseudospec.npz", "dim", &dim, {1}, "a");
 }
 
 int main(int argc, char **argv)

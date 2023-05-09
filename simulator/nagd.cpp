@@ -5,6 +5,7 @@
 #include <math.h>
 #include <omp.h>
 #include "potential.hpp"
+#include "config.hpp"
 #include <cnpy.h>
 
 using namespace std;
@@ -148,6 +149,28 @@ double compute_potential(const double *pot, const int num, const int par) {
     return ret;
 }
 
+double prob_at_minimum(const double *pot, const int num, const double thr,
+                       const int par) {
+    double prob;
+    //double mi;
+
+    /* compute Pr[result < thr] */
+    prob = 0;
+    //mi = 100;
+
+    #pragma omp parallel for reduction(+: prob)
+    for (int i = 0; i < num; i++) {
+        if (pot[i] < thr) {
+            prob += (double) 1 / num;
+        }
+        //if (pot[i] < mi) mi = pot[i];
+    }
+    //cout << "probcnt=" << prob << "mi=" << mi << endl;
+
+    /* convert to Pr[all par results < thr] */
+    return 1 - pow(1 - prob, par);
+}
+
 void nagd(const int dim, const int len, const double L, const double T, 
           const double dt, const double stepsize, const int par) {
     /*
@@ -160,8 +183,8 @@ void nagd(const int dim, const int len, const double L, const double T,
     int prog, prog_prev;
     int v[dim];
     double x[num][dim], y[num][dim], x_new[num][dim], y_new[num][dim], temp[dim];
-    double expected_pot, time_st, time_ed;
-    double pot[num_steps];
+    double expected_pot, time_st, time_ed, thr;
+    double pot[num_steps], prob_at_min[num_steps];
     double cur_pot[num];
     
     /* run NAGD with len^dim different initial values in the hypercube */
@@ -209,6 +232,10 @@ void nagd(const int dim, const int len, const double L, const double T,
         } 
 
         pot[step] = compute_potential(cur_pot, num, par);
+        if (step == 0) {
+            thr = thr_frac * compute_potential(cur_pot, num, 1);
+        }
+        prob_at_min[step] = prob_at_minimum(cur_pot, num, thr, par);
     }
 
     /* timing */
@@ -218,9 +245,12 @@ void nagd(const int dim, const int len, const double L, const double T,
 
     /* save results */
     npz_save("../result/nagd.npz", "expected_potential", pot, {(unsigned int) num_steps}, "w");
+    npz_save("../result/nagd.npz", "probability_at_minimum", prob_at_min, {(unsigned int) num_steps}, "a");
     npz_save("../result/nagd.npz", "T", &T, {1}, "a");
     npz_save("../result/nagd.npz", "dt", &dt, {1}, "a");
     npz_save("../result/nagd.npz", "par", &par, {1}, "a");
+    npz_save("../result/nagd.npz", "len", &len, {1}, "a");
+    npz_save("../result/nagd.npz", "dim", &dim, {1}, "a");
 }
 
 int main(int argc, char **argv)

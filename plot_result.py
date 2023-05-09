@@ -8,20 +8,40 @@ nagd_res = np.load('./result/nagd.npz')
   
 y_qhd = qhd_res['expected_potential']
 y_nagd = nagd_res['expected_potential']
-T = qhd_res['T']
-dt = qhd_res['dt']
+yp_qhd = qhd_res['probability_at_minimum']
+yp_nagd = nagd_res['probability_at_minimum']
+T = qhd_res['T'][0]
+dt = qhd_res['dt'][0]
+len = qhd_res['len'][0]
+dim = qhd_res['dim'][0]
 
 x = np.arange(0, T, dt)
-  
-# plotting the points 
-plt.plot(x, y_qhd, label="QHD*" + str(qhd_res['par'][0]))
-plt.plot(x, y_nagd, label="NAGD*" + str(nagd_res['par'][0]))
-  
-plt.xlabel('time')
-plt.ylabel('expectation')
-  
-plt.title('dt = ' + str(dt[0]))
 
-plt.legend(loc="upper right")
+# subplots
+f, (e_plt, p_plt) = plt.subplots(1, 2)
   
+# plotting for expected potential
+e_plt.plot(x, y_qhd, label="QHD*" + str(qhd_res['par'][0]))
+e_plt.plot(x, y_nagd, label="NAGD*" + str(nagd_res['par'][0]))
+  
+e_plt.set_xlabel('time')
+e_plt.set_ylabel('expectation')
+  
+#e_plt.set_title('dt = ' + str(dt[0]))
+
+e_plt.legend(loc="upper right")
+
+# plotting for probability at minimum
+p_plt.plot(x, yp_qhd, label="QHD*" + str(qhd_res['par'][0]))
+p_plt.plot(x, yp_nagd, label="NAGD*" + str(nagd_res['par'][0]))
+  
+p_plt.set_xlabel('time')
+p_plt.set_ylabel('prob. at min.')
+  
+#p_plt.set_title('dt = ' + str(dt[0]))
+
+p_plt.legend(loc="upper right")
+
+# show all
+f.suptitle('dt = ' + str(dt) + "; gran. = " + str(len) + "^" + str(dim))
 plt.show()
