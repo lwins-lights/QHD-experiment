@@ -11,6 +11,6 @@ run() {
 
 mkdir -p result/floudas2013handbook
 
-run p4_5 256 10 0.0001 1
-run p4_6 65536 10 0.0001 1
+run p4_5 256 10 0.001 1
+run p4_6 65536 10 0.001 1
 
