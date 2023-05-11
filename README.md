@@ -57,5 +57,9 @@ Example:
 To visualize the result, simply use the Python script:
 `python3 plot_result.py`
 
+## Possible Issues
+### Segmentation fault
+This is likely due to an insufficient stack size which is set to 8MB by default. Use, say, `ulimit -s 262144` to increase it to 256MB.
+
 ## Credit 
 Some code is adapted from https://github.com/jiaqileng/quantum-hamiltonian-descent/.

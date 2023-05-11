@@ -1,0 +1,7 @@
+#if !defined(CONFIG_HPP)
+#define CONFIG_HPP 1
+
+/* regard a solution approximately optimal if it is less than (thr_frac * initial_guess) */
+const double thr_frac = 0.05;
+
+#endif
