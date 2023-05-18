@@ -37,10 +37,6 @@ e_plt.plot(x, y_nagd, label="NAGD*" + str(nagd_res['par'][0]))
   
 e_plt.set_xlabel('time')
 e_plt.set_ylabel('expectation')
-  
-#e_plt.set_title('dt = ' + str(dt[0]))
-
-e_plt.legend(loc="upper right")
 
 # plotting for probability at minimum
 p_plt.plot(x, yp_qhd, label="QHD*" + str(qhd_res['par'][0]))
@@ -49,9 +45,11 @@ p_plt.plot(x, yp_nagd, label="NAGD*" + str(nagd_res['par'][0]))
 p_plt.set_xlabel('time')
 p_plt.set_ylabel('success probability')
   
-#p_plt.set_title('dt = ' + str(dt[0]))
-
-p_plt.legend(loc="upper right")
+# style
+e_plt.yaxis.tick_right()
+p_plt.yaxis.tick_right()
+e_plt.legend(loc="upper right")
+p_plt.legend(loc="lower right")
 
 # show all
 f.suptitle('dt = ' + str(dt) + "; gran. = " + str(len) + "^" + str(dim))
