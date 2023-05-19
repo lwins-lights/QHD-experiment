@@ -275,5 +275,6 @@ int main(int argc, char **argv)
     printf("Max threads: %d\n", omp_get_num_procs());
     printf("Threads: %d\n", omp_get_max_threads());
 
-    nagd(dim, len, L, T, dt, stepsize, par);
+    //nagd(dim, len, L, T, dt, stepsize, par);
+    nagd(dim, len, L, T, dt, 2 * L * fd_frac, par);
 }

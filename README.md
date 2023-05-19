@@ -42,6 +42,8 @@ sudo ldconfig
 ```
 
 ## Usage
+
+### Optimizing for one function
 First, define the potential function in a `.cpp` file (refer to `func/l2.cpp` for example). The potential will be defined on [`-L`,`L`)^`dim` where `L` and `dim` specified in the corresponding `.cpp` file.
 The following shell script will run solvers (QHD and NAGD) to find the global minimum of the potential function:
 `bash ./run_all.sh <num_cells> <T> <dt> <par> <func_cpp_path>`
@@ -56,6 +58,9 @@ Example:
 
 To visualize the result, simply use the Python script:
 `python3 plot_result.py`
+
+### Preset script
+Use `bash script/run_all_in_floudas2013handbook.sh`, which in turn calls `run_all.sh`, to run the preset experiment for selected functions from *Handbook of Test Problems in Local and Global Optimization*. The result will be saved in `result/floudas2013handbook/`.
 
 ## Possible Issues
 ### Segmentation fault

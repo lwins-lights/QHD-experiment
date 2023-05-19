@@ -3,6 +3,7 @@
  *  
  *  domain zoomed to [-0.5, 0.5)^3 while compressing the Lipschitz constant by a factor
  *  global minimum adjusted to 0 by displacement
+ *  using input variable w := 1/t2
  * 
  */
 
@@ -30,7 +31,8 @@ double get_potential(const double *x) {
     const double zooming = 99;
     const double compress = 10;
     const double t1 = x[0] * zooming + 50.5;
-    const double t2 = x[1] * zooming + 50.5;
+    const double w = (x[1] + 0.5) * 99 / 100 + 0.01;
+    const double t2 = 1 / w;
     const double t3 = x[2] * zooming + 50.5;
     double cons = 0.01 * t2 / t3 + 0.01 * t1 + 0.0005 * t1 * t3;
     double f = 0.5 * t1 / t2 - t1 - 5.0 / t2 / t2

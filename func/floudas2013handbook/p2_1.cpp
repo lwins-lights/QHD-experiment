@@ -20,9 +20,16 @@ void get_potential_params(double &var_L, int &var_dim) {
     var_dim = dim;
 }
 
+double l2_penalty(const double x, const double c) {
+    if (x < 0) {
+        return 0;
+    } else {
+        return c * x * x;
+    }
+}
+
 double get_potential(const double *x) {
     const double compress = 10;
-    const double inf = 250;
     const double x1 = -x[0] + 0.5; 
     const double x2 = -x[1] + 0.5;
     const double x3 = x[2] + 0.5;
@@ -33,10 +40,7 @@ double get_potential(const double *x) {
              + 45 * x3
              + 47 * x4
              + 47.5 * x5
-             - 50 * (x1 * x1 + x2 * x2 + x3 * x3 + x4 * x4 + x5 * x5);
-    double cons = 20 * x1 + 12 * x2 + 11 * x3 + 7 * x4 + 4 * x5;
-    if (cons > 40) {
-        f = inf;
-    }
+             - 50 * (x1 * x1 + x2 * x2 + x3 * x3 + x4 * x4 + x5 * x5)
+             + l2_penalty(20 * x1 + 12 * x2 + 11 * x3 + 7 * x4 + 4 * x5 - 40, 1);
     return (f + 17) / compress;
 }

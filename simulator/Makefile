@@ -19,4 +19,4 @@ nagd: nagd.o potential.o
 	$(CXX) $(CXXFLAGS) -o nagd $^ -fopenmp -lm -lcnpy -lz -ltbb
 
 clean:
-	rm -f pseudospec pseudospec.o nagd nagd.o potential.hpp.gch potential.o
+	rm -f pseudospec pseudospec.o nagd nagd.o potential.hpp.gch potential.o config.hpp.gch
