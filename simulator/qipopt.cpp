@@ -78,11 +78,13 @@ double sqr_norm(const int *x, const int size) {
 }
 
 double t_dep_1(const double t) {
-    return 2 / (1e-3 + t * t * t);
+    //return 2 / (1e-3 + t * t * t);
+    return 1;
 }
 
 double t_dep_2(const double t) {
-    return 2 * t * t * t;
+    //return 2 * t * t * t;
+    return 1;
 }
 
 void hadamard_product(comp *A, comp *B, comp *C, int size) {
@@ -230,6 +232,29 @@ double prob_at_minimum(const comp *psi, const double *V, const int size,
     return 1 - pow(1 - prob, par);
 }
 
+double kinetic_energy(comp *psi, double kop_coef, comp *kop,
+                       int dim, int *n, int size) {
+
+    fftw_plan plan_ft, plan_ift;
+    comp v[size], u[size];
+    double tot_prob, tot_energy;
+
+    fftw_plan_with_nthreads(omp_get_max_threads());
+    plan_ft = fftw_plan_dft(dim, n, (fftw_complex *) psi, (fftw_complex *) u, FFTW_FORWARD, FFTW_ESTIMATE);
+
+    fftw_execute(plan_ft);
+
+    tot_prob = tot_energy = 0;
+
+    #pragma omp parallel for reduction(+: tot_prob, tot_energy)
+    for (int i = 0; i < size; i++) {
+        tot_prob += (u[i] * conj(u[i])).real();
+        tot_energy += (u[i] * conj(u[i])).real() * kop_coef * kop[i].real();
+    }
+
+    return tot_energy / tot_prob;
+}
+
 void pseudospec(const int dim, const int len, const double L, const double T, 
                 const double dt, comp *psi, const int par,
                 double (*kop_coef)(double), 
@@ -248,7 +273,7 @@ void pseudospec(const int dim, const int len, const double L, const double T,
     int i, prog, prog_prev;
     comp kop[size], u[size], psi_new[size], temp[size];
     double time_st, time_ed, t, temp_tot, thr;
-    double pot[num_steps], prob_at_min[num_steps];
+    double pot[num_steps], kin[num_steps];
     double V[size];
     fftw_plan plan_ft, plan_ift;
 
@@ -317,9 +342,6 @@ void pseudospec(const int dim, const int len, const double L, const double T,
             psi[i] = psi_new[i] / sqrt(temp_tot);
         }
 
-        /* update current time */
-        t = (step + 1) * dt;
-
         /* print progress bar */
         prog = (step + 1) * 100 / num_steps;
         if (prog != prog_prev) {
@@ -327,11 +349,15 @@ void pseudospec(const int dim, const int len, const double L, const double T,
             prog_prev = prog;
         } 
 
-        pot[step] = expected_potential(psi, V, size, par) / t_dep_2(t);
+        pot[step] = expected_potential(psi, V, size, par);
         if (step == 0) {
             thr = thr_frac * expected_potential(psi, V, size, 1);
         }
-        prob_at_min[step] = prob_at_minimum(psi, V, size, thr, par);
+        //prob_at_min[step] = prob_at_minimum(psi, V, size, thr, par);
+        kin[step] = kinetic_energy(psi, kop_coef(t), kop, dim, n, size);
+
+        /* update current time */
+        t = (step + 1) * dt;
     }
 
     /* timing */
@@ -341,7 +367,7 @@ void pseudospec(const int dim, const int len, const double L, const double T,
 
     /* save results */
     npz_save("../result/qipopt.npz", "expected_potential", pot, {(unsigned int) num_steps}, "w");
-    npz_save("../result/qipopt.npz", "probability_at_minimum", prob_at_min, {(unsigned int) num_steps}, "a");
+    npz_save("../result/qipopt.npz", "expected_kinetic", kin, {(unsigned int) num_steps}, "a");
     npz_save("../result/qipopt.npz", "T", &T, {1}, "a");
     npz_save("../result/qipopt.npz", "dt", &dt, {1}, "a");
     npz_save("../result/qipopt.npz", "par", &par, {1}, "a");
