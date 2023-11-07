@@ -5,7 +5,7 @@
 #include <math.h>
 #include <fftw3.h>
 #include <omp.h>
-#include "potential.hpp"
+#include "qipopt_F.hpp"
 #include "config.hpp"
 #include <cnpy.h>
 
@@ -97,26 +97,6 @@ void hadamard_product(comp *A, comp *B, comp *C, int size) {
     #pragma omp parallel for private(i)
     for (i = 0; i < size; i++) {
         C[i] = A[i] * B[i];
-    }
-}
-
-void load_potential_to_array(double *V, double t, const int len, const double L, const int dim) {
-    
-    int i;
-
-    const int size = pow(len, dim);
-
-    int v[dim];
-    double x[dim];
-
-    #pragma omp parallel for private(i, v, x)
-    for (i = 0; i < size; i++) {
-        int_to_coord(i, v, dim, len);
-        for (int j = 0; j < dim; j++) {
-            /* map [0, len) to [-L, L) */
-            x[j] = (double) v[j] * 2 * L / len - L;
-        }
-        V[i] = get_potential(x) * t_dep_2(t);
     }
 }
 
@@ -249,16 +229,119 @@ double kinetic_energy(comp *psi, double kop_coef, comp *kop,
     #pragma omp parallel for reduction(+: tot_prob, tot_energy)
     for (int i = 0; i < size; i++) {
         tot_prob += (u[i] * conj(u[i])).real();
-        tot_energy += (u[i] * conj(u[i])).real() * kop_coef * kop[i].real();
+        //tot_energy += (u[i] * conj(u[i])).real() * kop_coef * kop[i].real();
+        tot_energy += (u[i] * conj(u[i])).real() * kop[i].real();
     }
 
-    return tot_energy / tot_prob;
+    return tot_energy / tot_prob * kop_coef;
+}
+
+double dg(const double tau) {
+    /*
+        the derivative of g function in the paper without normalization
+    */
+
+    if (tau <= 0 || tau >= 1) {
+        return 0;
+    } else {
+        return exp(-1 / tau / (1 - tau));
+    }
+}
+
+void initialize_mu(const int num, double *mu) {
+    /*
+        mu function in the paper where t \in [0,1]
+        the returned vector mu[i] := mu(i/num)
+    */
+
+    mu[0] = 0;
+    for (int i = 1; i < num; i++) {
+        mu[i] = mu[i - 1] + dg(double(i) / num);
+    }
+    for (int i = 0; i < num; i++) {
+        mu[i] /= mu[num - 1];
+        mu[i] = 1 - (1 - mu_f) * mu[i];
+    }
+    //printf("%.8lf,%.8lf\n", mu[0], mu[num-1]);
+}
+
+double get_mu(double t, double *mu, int size) {
+    return mu[int(size * t)];
+}
+
+/*
+double get_h(double t, double *mu, int size, double h_coef) {
+    return get_mu(t, mu, size) * h_coef
+}
+*/
+
+double qcp_kop_coef(double t, double eta_qhd, double eta) {
+    double tp; // true time rescaled
+    double nominal = 0;
+
+    if (t <= 1) {
+        tp = t / eta_qhd;
+        nominal = 1 / (1e-6 + tp) - 1 / (1e-6 + 1 / eta) + tp * h_coef * h_coef;
+        return nominal / eta_qhd;
+    } else {
+        nominal = h_coef;
+        return nominal / eta;
+    }
+}
+
+double qcp_pot_coef(double t, double eta_qhd, double eta, double *mu, int size) {
+    double tp; // true time rescaled
+    double nominal = 0;
+    double temp;
+
+    if (t <= 1) {
+        tp = t / eta_qhd;
+        nominal = 1 * tp;
+        return nominal / eta_qhd;
+    } else {
+        temp = get_mu(t - 1, mu, size);
+        nominal = 1 / h_coef / temp / temp;
+        return nominal / eta;
+    }
+}
+
+void qcp_pot_loader(double *V, double t, const int len, const double L, const int dim, double eta, double *mu_data, int mu_size) {
+
+    int size = pow(len, dim);
+ 
+    int v[dim];
+    double x[dim], F[dim];
+    double mu;
+    double tp = t / eta; // true time rescaled
+
+    if (t <= 1) {
+        mu = get_mu(0, mu_data, mu_size);
+    } else {
+        mu = get_mu(t - 1, mu_data, mu_size);
+        //printf("%.4lf\n", mu);
+    }
+    #pragma omp parallel for private(v, x, F)
+    for (int i = 0; i < size; i++) {
+        int_to_coord(i, v, dim, len);
+        for (int j = 0; j < dim; j++) {
+            /* map [0, len) to [-L, L) */
+            x[j] = (double) v[j] * 2 * L / len - L;
+        }
+        get_F(x, F);
+        V[i] = 0;
+        for (int j = 0; j < dim; j++) {
+            F[j] -= mu;
+            V[i] += 0.5 * F[j] * F[j];
+        }
+    }
 }
 
 void pseudospec(const int dim, const int len, const double L, const double T, 
-                const double dt, comp *psi, const int par,
-                double (*kop_coef)(double), 
-                void (*pot_loader)(double*, double, int, double, int)) {
+                const double dt, comp *psi, const int par, double eta_qhd, double eta, 
+                double *mu_data, int mu_size,
+                double (*kop_coef)(double, double, double), 
+                double (*pot_coef)(double, double, double, double*, int),
+                void (*pot_loader)(double*, double, int, double, int, double, double*, int)) {
     /*
         pseudospectral solver for time-dependent Schrodinger equation
             H(t) = t_dep_1(t)*(-1/2*\nabla^2) + t_dep_2(t)*V(x)
@@ -272,9 +355,10 @@ void pseudospec(const int dim, const int len, const double L, const double T,
     int n[dim];
     int i, prog, prog_prev;
     comp kop[size], u[size], psi_new[size], temp[size];
-    double time_st, time_ed, t, temp_tot, thr;
+    double time_st, time_ed, t, temp_tot, thr, cur_kop_coef, cur_pot_coef;
     double pot[num_steps], kin[num_steps];
     double V[size];
+    double prob[101 * size];
     fftw_plan plan_ft, plan_ift;
 
     /* n for fftw later */
@@ -309,22 +393,27 @@ void pseudospec(const int dim, const int len, const double L, const double T,
 
         /* potential term first */
 
-        pot_loader(V, t, len, L, dim);
+        pot_loader(V, t, len, L, dim, eta, mu_data, mu_size);
+        cur_pot_coef = pot_coef(t, eta_qhd, eta, mu_data, int(1.0 / dt));
 
         #pragma omp parallel for private(i)
         for (i = 0; i < size; i++) {
-            temp[i] = exp(-iu * dt * V[i]);
+            temp[i] = exp(-iu * V[i] * (dt * cur_pot_coef));
         }
+        //printf("[DEBUG] V=[%.8lf %.8lf]\n", V[0], V[1]);
+        //printf("[DEBUG] Vtemp=[%.8lf %.8lf]\n", temp[0].real(), temp[1].real());
 
         hadamard_product(temp, psi, u, size);
 
         /* then kinetic term:  */
         fftw_execute(plan_ft);
+        cur_kop_coef = kop_coef(t, eta_qhd, eta);
 
         #pragma omp parallel for private(i)
         for (i = 0; i < size; i++) {
-            temp[i] = exp(-iu * dt * kop_coef(t) * kop[i]);
+            temp[i] = exp(-iu * kop[i] * (dt * cur_kop_coef));
         }
+        //printf("[DEBUG] temp=[%.8lf %.8lf]\n", temp[0].real(), temp[1].real());
 
         hadamard_product(temp, u, u, size);
         fftw_execute(plan_ift);
@@ -347,6 +436,11 @@ void pseudospec(const int dim, const int len, const double L, const double T,
         if (prog != prog_prev) {
             print_prog_bar(prog);
             prog_prev = prog;
+            /* save potential to prob */
+            #pragma omp parallel for private(i)
+            for (i = 0; i < size; i++) {
+                prob[prog * size + i] = (psi[i] * conj(psi[i])).real();
+            }
         } 
 
         pot[step] = expected_potential(psi, V, size, par);
@@ -354,7 +448,16 @@ void pseudospec(const int dim, const int len, const double L, const double T,
             thr = thr_frac * expected_potential(psi, V, size, 1);
         }
         //prob_at_min[step] = prob_at_minimum(psi, V, size, thr, par);
-        kin[step] = kinetic_energy(psi, kop_coef(t), kop, dim, n, size);
+        kin[step] = kinetic_energy(psi, kop_coef(t, eta_qhd, eta), kop, dim, n, size);
+
+        /* normalize such that pot[] is invaraint to eta and h_coef */
+        //pot[step] *= (eta * h_coef);
+        //kin[step] *= (eta * h_coef);
+
+        /* debug */
+            //const int qqq[5] = {len/2, len/2, len/2, len/2, len/2};
+            //comp ttt = psi[coord_to_int(qqq, 5, len)];
+            //printf("[%.8lf] %.8lf\n", t, (ttt * conj(ttt)).real());
 
         /* update current time */
         t = (step + 1) * dt;
@@ -368,27 +471,33 @@ void pseudospec(const int dim, const int len, const double L, const double T,
     /* save results */
     npz_save("../result/qipopt.npz", "expected_potential", pot, {(unsigned int) num_steps}, "w");
     npz_save("../result/qipopt.npz", "expected_kinetic", kin, {(unsigned int) num_steps}, "a");
+    npz_save("../result/qipopt.npz", "probability", prob, {101, (unsigned int) size}, "a");
     npz_save("../result/qipopt.npz", "T", &T, {1}, "a");
+    npz_save("../result/qipopt.npz", "L", &L, {1}, "a");
     npz_save("../result/qipopt.npz", "dt", &dt, {1}, "a");
     npz_save("../result/qipopt.npz", "par", &par, {1}, "a");
     npz_save("../result/qipopt.npz", "len", &len, {1}, "a");
     npz_save("../result/qipopt.npz", "dim", &dim, {1}, "a");
+    npz_save("../result/qipopt.npz", "eta", &eta, {1}, "a");
 }
 
 int main(int argc, char **argv)
 {
-    if (argc != 5) {
-        perror("Expected arguments: ./qipopt <len> <T> <dt> <par>");
+    if (argc != 6) {
+        perror("Expected arguments: ./qipopt <len> <eta_qhd> <eta> <dt> <par>");
         exit(EXIT_FAILURE);
     }
     const int len = stoi(argv[1]);
-    const double T = stod(argv[2]);
-    const double dt = stod(argv[3]);
-    const int par = stoi(argv[4]);
+    const double eta_qhd = stod(argv[2]);
+    const double eta = stod(argv[3]);
+    const double dt = stod(argv[4]);
+    const int par = stoi(argv[5]);
+    const double T = 2;
+    const int mu_size = int(1.0 / dt);
 
     double L;
     int dim;
-    get_potential_params(L, dim);
+    get_F_params(L, dim);
 
     const int size = pow(len, dim);
     //double V[size];
@@ -396,6 +505,7 @@ int main(int argc, char **argv)
 
     printf("L=%f, len=%d\n", L, len);
     printf("T=%f, dt=%f\n", T, dt);
+    printf("eta_qhd=%f, eta=%f\n", eta_qhd, eta);
 
     const double stepsize = 2 * L / len;
     printf("stepsize=%f\n", stepsize);
@@ -403,9 +513,11 @@ int main(int argc, char **argv)
     printf("Threads: %d\n", omp_get_max_threads());
 
     comp psi[size];
+    double mu[int(1.0 / dt)];
 
+    initialize_mu(mu_size, mu);
     initialize_psi(psi, size);
-    pseudospec(dim, len, L, T, dt, psi, par, t_dep_1, load_potential_to_array);
+    pseudospec(dim, len, L, T, dt, psi, par, eta_qhd, eta, mu, mu_size, qcp_kop_coef, qcp_pot_coef, qcp_pot_loader);
     
     return 0;
 }

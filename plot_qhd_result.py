@@ -20,8 +20,8 @@ dim = res['dim'][0]
 #print(T)
 
 # plot 1
-x = np.arange(0, T, dt)
 y = res['expected_potential']
+x = np.arange(0, T, T / y.size)
 
 #print(y)
   
@@ -31,8 +31,8 @@ plt1.set_ylabel('potential')
 plt1.plot(x, y)
 
 # plot 2
-x = np.arange(0, T, dt)
 y = res['expected_kinetic'] + res['expected_potential']
+x = np.arange(0, T, T / y.size)
 plt2.plot(x, y, label="Total")
 
 y = res['expected_kinetic']

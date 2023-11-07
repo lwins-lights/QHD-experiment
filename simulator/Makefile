@@ -30,7 +30,7 @@ qipopt_F.o: qipopt_F.hpp qipopt_F.cpp
 qipopt.o: qipopt.cpp config.hpp
 	$(CXX) $(CXXFLAGS) -c $^ -fopenmp
 
-qipopt: qipopt.o potential.o
+qipopt: qipopt.o qipopt_F.o
 	$(CXX) $(CXXFLAGS) -o qipopt $^ -fopenmp -lfftw3_omp -lfftw3 -lm -lcnpy -lz -ltbb
 
 clean:
