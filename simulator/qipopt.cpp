@@ -215,6 +215,8 @@ double prob_at_minimum(const comp *psi, const double *V, const int size,
 double kinetic_energy(comp *psi, double kop_coef, comp *kop,
                        int dim, int *n, int size) {
 
+    return 0;
+
     fftw_plan plan_ft, plan_ift;
     comp v[size], u[size];
     double tot_prob, tot_energy;
