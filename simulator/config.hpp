@@ -10,7 +10,11 @@ const double fd_frac = 1e-6;
 /* dictates sqrt(learning_rate) in SGD, i.e., the standard deviation of the Gaussian (Brownian) noise per time unit */
 //const double noise_level = 1;
 
-const double mu_f = 1e-6;
+const int mu_size = 10000000;
+const double dt_init = 1e-4;
+const double dt_grow = 1.1;
+const double dt_shrink = 0.5;
+const double mu_f = 0.05;
 const double h_coef = 0.05;
 
 #endif

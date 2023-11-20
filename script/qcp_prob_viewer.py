@@ -7,11 +7,11 @@ from matplotlib.widgets import Slider
 from tqdm import tqdm
 from itertools import product
 
-def number_to_base(n, b):
+def number_to_base(n, b, d):
     if n == 0:
         return [0]
     digits = []
-    while n:
+    for i in range(d):
         digits.append(int(n % b))
         n //= b
     return digits
@@ -20,37 +20,44 @@ def number_to_base(n, b):
 dpi = mpl.rcParams['figure.dpi']
 
 # load params from file
-res = np.load('./result/qipopt.npz')
+#res = np.load('./result/qipopt.npz')
+res = np.load("./result/qipopt/20 0.05 0.05 0.001 1 (0.01)/qipopt.npz")
 T = res['T'][0]
 L = res['L'][0]
-dt = res['dt'][0]
 len = res['len'][0]
 dim = res['dim'][0]
-dt = res['dt'][0]
+disc = res['disc'][0]
 eta = res['eta'][0]
+print(eta)
 prob = res['probability']
 
 # skeleton
 fig, ax = plt.subplots()
 fig.subplots_adjust(bottom=0.25)
 
-def get_ly(prog, d, len, dim, prob_agg):
+def get_ly(prog, d, len, dim, prob_agg, ntb):
     size = len ** dim;
     prob = prob_agg[prog]
     ly = [0] * len
     for i in range(size):
         try:
-            temp = number_to_base(i, len)[d]
+            temp = ntb[i][d]
         except:
             temp = 0
         ly[temp] += prob[i]
     return ly
 
+# init ntb array
+size = len ** dim
+ntb = []
+for i in range(size):
+    ntb.append(number_to_base(i, len, dim))
+
 # init: prepare all figures
 ly = {}
 rg = list(product(range(dim), range(101)))
 for d, prog in tqdm(rg):
-    ly[(d, prog)] = get_ly(prog, d, len, dim, prob)
+    ly[(d, prog)] = get_ly(prog, d, len, dim, prob, ntb)
 
 # initial plot
 lx = np.arange(-L, L, 2 * L / len)
