@@ -33,21 +33,15 @@ plt1.set_yscale('log')
 plt1.plot(x, y)
 
 # plot 2
-'''
-y = res['expected_kinetic'] + res['expected_potential']
-x = np.arange(0, T, T / y.size)
-plt2.plot(x, y, label="Total")
 
-y = res['expected_kinetic']
-plt2.plot(x, y, label="Kinetic")
-
-y = res['expected_potential']
-plt2.plot(x, y, label="Potential")
+y = res['expected_duality_gap']
+x = res['timestamps']
 
 plt2.set_xlabel('time')
-plt2.set_ylabel('energy')
-plt.legend()
-'''
+plt2.set_ylabel('duality gap')
+plt2.set_yscale('log')
+
+plt2.plot(x, y)
 
 # show all
 plt.suptitle('disc = ' + str(disc) + "; gran. = " + str(len) + "^" + str(dim))

@@ -14,7 +14,7 @@ const int mu_size = 10000000;
 const double dt_init = 1e-4;
 const double dt_grow = 1.1;
 const double dt_shrink = 0.5;
-const double mu_f = 0.05;
+const double mu_f = 0.01;
 const double h_coef = 0.05;
 
 #endif

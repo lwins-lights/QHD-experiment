@@ -156,7 +156,7 @@ double expected_potential(const comp *psi, const double *V, const int size,
         double prob, pot;
     };
 
-    pp_pair pp[size];
+    pp_pair *pp = new pp_pair[size];
     double ret, tot_prob, tot_prob_new;
 
     #pragma omp parallel for
@@ -185,6 +185,8 @@ double expected_potential(const comp *psi, const double *V, const int size,
             ret += pp[i].pot * pp[i].prob;
         }
     }
+
+    delete[] pp;
 
     return ret;
 }
@@ -308,7 +310,7 @@ double qcp_pot_coef(double t, double eta_qhd, double eta, double *mu, int size) 
     }
 }
 
-void qcp_pot_loader(double *V, double t, const int len, const double L, const int dim, double eta, double *mu_data, int mu_size) {
+void qcp_pot_loader(double *V, double *W, double t, const int len, const double L, const int dim, double eta, double *mu_data, int mu_size) {
 
     int size = pow(len, dim);
  
@@ -331,12 +333,25 @@ void qcp_pot_loader(double *V, double t, const int len, const double L, const in
             x[j] = (double) v[j] * 2 * L / len - L;
         }
         get_F(x, F);
-        V[i] = 0;
+        V[i] = W[i] = 0;
         for (int j = 0; j < dim; j++) {
+            W[i] += F[j] / dim;
             F[j] -= mu;
             V[i] += 0.5 * F[j] * F[j];
         }
     }
+}
+
+double get_avg_comp_gap(comp *psi, double *W, int size) {
+
+    double ret = 0;
+
+    #pragma omp parallel for reduction(+: ret)
+    for (int i = 0; i < size; i++) {
+        ret += (psi[i] * conj(psi[i])).real() * W[i];
+    }
+
+    return ret;
 }
 
 void pseudospec(const int dim, const int len, const double L, const double T, 
@@ -344,7 +359,7 @@ void pseudospec(const int dim, const int len, const double L, const double T,
                 double *mu_data, int mu_size,
                 double (*kop_coef)(double, double, double), 
                 double (*pot_coef)(double, double, double, double*, int),
-                void (*pot_loader)(double*, double, int, double, int, double, double*, int)) {
+                void (*pot_loader)(double*, double*, double, int, double, int, double, double*, int)) {
     /*
         pseudospectral solver for time-dependent Schrodinger equation
             H(t) = t_dep_1(t)*(-1/2*\nabla^2) + t_dep_2(t)*V(x)
@@ -362,10 +377,11 @@ void pseudospec(const int dim, const int len, const double L, const double T,
     comp *temp = new comp[size];
     double time_st, time_ed, t, dt, temp_tot, thr, cur_kop_coef, cur_pot_coef;
     double *V = new double[size];
+    double *W = new double[size];
     double *psi_prob = new double[size];
     double *prob = new double[101 * size];
     fftw_plan plan_ft, plan_ift;
-    vector<double> time_arr, pot_arr;
+    vector<double> time_arr, pot_arr, gap_arr;
 
     /* n for fftw later */
     for (i = 0; i < dim; i++) {
@@ -399,7 +415,7 @@ void pseudospec(const int dim, const int len, const double L, const double T,
     while (t < T) {
 
         /* potential term first */
-        pot_loader(V, t, len, L, dim, eta, mu_data, mu_size);
+        pot_loader(V, W, t, len, L, dim, eta, mu_data, mu_size);
         cur_pot_coef = pot_coef(t, eta_qhd, eta, mu_data, mu_size);
 
         /* compute the probability distribution */
@@ -477,6 +493,7 @@ void pseudospec(const int dim, const int len, const double L, const double T,
         /* store results */
         time_arr.push_back(t);
         pot_arr.push_back(expected_potential(psi, V, size, par));
+        gap_arr.push_back(get_avg_comp_gap(psi, W, size));
 
         /* update current time */
         t += dt;
@@ -488,19 +505,24 @@ void pseudospec(const int dim, const int len, const double L, const double T,
     printf("Pseudospectral integrator runtime = %.5f s\n", time_ed - time_st);
 
     /* save results */
-    double time_arr_classical[time_arr.size()];
+    double *time_arr_classical = new double[time_arr.size()];
     #pragma omp parallel for private(i) 
     for (i = 0; i < time_arr.size(); i++) {
         time_arr_classical[i] = time_arr[i];
     }
-    double pot_arr_classical[pot_arr.size()];
+    double *pot_arr_classical = new double[pot_arr.size()];
     #pragma omp parallel for private(i) 
     for (i = 0; i < pot_arr.size(); i++) {
         pot_arr_classical[i] = pot_arr[i];
     }
+    double *gap_arr_classical = new double[gap_arr.size()];
+    #pragma omp parallel for private(i) 
+    for (i = 0; i < gap_arr.size(); i++) {
+        gap_arr_classical[i] = gap_arr[i];
+    }
     npz_save("../result/qipopt.npz", "timestamps", time_arr_classical, {time_arr.size()}, "w");
     npz_save("../result/qipopt.npz", "expected_potential", pot_arr_classical, {pot_arr.size()}, "a");
-    //npz_save("../result/qipopt.npz", "expected_kinetic", kin, {(unsigned int) num_steps}, "a");
+    npz_save("../result/qipopt.npz", "expected_duality_gap", gap_arr_classical, {gap_arr.size()}, "a");
     npz_save("../result/qipopt.npz", "probability", prob, {101, (unsigned int) size}, "a");
     npz_save("../result/qipopt.npz", "T", &T, {1}, "a");
     npz_save("../result/qipopt.npz", "L", &L, {1}, "a");
