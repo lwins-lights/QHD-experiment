@@ -43,6 +43,18 @@ sudo ldconfig
 
 ## Usage
 
+### qcp.py
+The main function is `qcp_run(n, M, ub=2, eta_qhd=0.05, eta=0.05, res=10, disc=0.01, rand=0.5, verbose=False)`
+- `n`: dimension of M
+- `M`: the antisymmetric matrix that encodes the self-dual LO
+- `ub`: the QCP subprocess will evolve in the box [0,ub]^n
+- `eta_qhd`: controlling parameter of QHD for obtaining initial ground state of QCPM
+- `eta`: eta in the QCPM paper
+- `res`: the box [0,ub]^n will be discretized into res^n blocks
+- `disc`: the maximal allowed L1 distance of wave functions between two consecutive simulation steps
+- `rand`: a random number in [0,1) for sampling from the wave function at the very last
+- `verbose`: print extra information if set to True
+
 ### Optimizing for one function
 First, define the potential function in a `.cpp` file (refer to `func/l2.cpp` for example). The potential will be defined on [`-L`,`L`)^`dim` where `L` and `dim` specified in the corresponding `.cpp` file.
 The following shell script will run solvers (QHD and NAGD) to find the global minimum of the potential function:
