@@ -215,6 +215,24 @@ double prob_at_minimum(const comp *psi, const double *V, const int size,
     return 1 - pow(1 - prob, par);
 }
 
+void sample_from_psi(const comp *psi, const double rand, double *z, const double L, const int len, const int dim) {
+
+    const int size = pow(len, dim);
+    double p = 0;
+    int x[dim];
+
+    for (int i = 0; i < size; i++) {
+        p += (psi[i] * conj(psi[i])).real();
+        if (p > rand) {
+            int_to_coord(i, x, dim, len);
+            for (int j = 0; j < dim; j++)
+                z[j] = x[j] * 2 * L / len - L;
+            //printf("[DEBUG] i=%d rand=%.4lf", i, rand);
+            return;
+        }
+    }
+}
+
 double kinetic_energy(comp *psi, double kop_coef, comp *kop,
                        int dim, int *n, int size) {
 
@@ -356,7 +374,7 @@ double get_avg_comp_gap(comp *psi, double *W, int size) {
 
 void pseudospec(const int dim, const int len, const double L, const double T, 
                 const double disc, comp *psi, const int par, double eta_qhd, double eta, 
-                double *mu_data, int mu_size,
+                double *mu_data, int mu_size, const double rand, 
                 double (*kop_coef)(double, double, double), 
                 double (*pot_coef)(double, double, double, double*, int),
                 void (*pot_loader)(double*, double*, double, int, double, int, double, double*, int)) {
@@ -380,6 +398,7 @@ void pseudospec(const int dim, const int len, const double L, const double T,
     double *W = new double[size];
     double *psi_prob = new double[size];
     double *prob = new double[101 * size];
+    double z[dim];
     fftw_plan plan_ft, plan_ift;
     vector<double> time_arr, pot_arr, gap_arr;
 
@@ -487,7 +506,7 @@ void pseudospec(const int dim, const int len, const double L, const double T,
                 prob[prog * size + i] = (psi[i] * conj(psi[i])).real();
             }
             /* debug */
-            printf("dt = %f\n", dt);
+            //printf("dt = %f\n", dt);
         } 
 
         /* store results */
@@ -498,6 +517,8 @@ void pseudospec(const int dim, const int len, const double L, const double T,
         /* update current time */
         t += dt;
     }
+
+    sample_from_psi(psi, rand, z, L, len, dim);
 
     /* timing */
     time_ed = omp_get_wtime();
@@ -531,19 +552,21 @@ void pseudospec(const int dim, const int len, const double L, const double T,
     npz_save("../result/qipopt.npz", "len", &len, {1}, "a");
     npz_save("../result/qipopt.npz", "dim", &dim, {1}, "a");
     npz_save("../result/qipopt.npz", "eta", &eta, {1}, "a");
+    npz_save("../result/qipopt.npz", "sample", z, {(unsigned int) dim}, "a");
 }
 
 int main(int argc, char **argv)
 {
     if (argc != 6) {
-        perror("Expected arguments: ./qipopt <len> <eta_qhd> <eta> <disc> <par>");
+        perror("Expected arguments: ./qipopt <len> <eta_qhd> <eta> <disc> <rand>");
         exit(EXIT_FAILURE);
     }
     const int len = stoi(argv[1]);
     const double eta_qhd = stod(argv[2]);
     const double eta = stod(argv[3]);
     const double disc = stod(argv[4]);
-    const int par = stoi(argv[5]);
+    const double rand = stod(argv[5]);
+    const int par = 1;
     const double T = 2;
 
     double L;
@@ -568,7 +591,7 @@ int main(int argc, char **argv)
 
     initialize_mu(mu_size, mu); //printf("mu=%.8lf\n",get_mu(0.7, mu, mu_size));
     initialize_psi(psi, size);
-    pseudospec(dim, len, L, T, disc, psi, par, eta_qhd, eta, mu, mu_size, qcp_kop_coef, qcp_pot_coef, qcp_pot_loader);
+    pseudospec(dim, len, L, T, disc, psi, par, eta_qhd, eta, mu, mu_size, rand, qcp_kop_coef, qcp_pot_coef, qcp_pot_loader);
     
     return 0;
 }

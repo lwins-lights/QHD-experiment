@@ -17,7 +17,7 @@ disc = res['disc'][0]
 len = res['len'][0]
 dim = res['dim'][0]
 
-#print(T)
+#print(res['sample'])
 
 # plot 1
 y = res['expected_potential']
