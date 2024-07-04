@@ -230,6 +230,16 @@ double prob_at_minimum(const comp *psi, const double *V, const int size,
     return 1 - pow(1 - prob, par);
 }
 
+double get_minimum(const double *V, const int size) {
+    double ret = V[0];
+    for (int i = 0; i < size; i++) {
+        if (V[i] < ret) {
+            ret = V[i];
+        }
+    }
+    return ret;
+}
+
 void pseudospec(const int dim, const int len, const double L, const double T, 
                 const double dt, const double *V, comp *psi, const int par) {
     /*
@@ -362,6 +372,7 @@ int main(int argc, char **argv)
     const int size = pow(len, dim);
     double V[size];
     load_potential_to_array(V, len, L, dim);
+    printf("Post-Discretization Minimum: %f\n", get_minimum(V, size));
 
     printf("L=%f, len=%d\n", L, len);
     printf("T=%f, dt=%f\n", T, dt);
