@@ -1,4 +1,4 @@
-all: pseudospec nagd sgd
+all: pseudospec nagd sgd subgrad
 
 CXX := g++
 CXXFLAGS := -O3 --std=c++17
@@ -24,6 +24,12 @@ sgd.o: sgd.cpp config.hpp
 sgd: sgd.o potential.o
 	$(CXX) $(CXXFLAGS) -o sgd $^ -fopenmp -lm -lcnpy -lz -ltbb
 
+subgrad.o: subgrad.cpp config.hpp
+	$(CXX) $(CXXFLAGS) -c $^ -fopenmp
+
+subgrad: subgrad.o potential.o
+	$(CXX) $(CXXFLAGS) -o subgrad $^ -fopenmp -lm -lcnpy -lz -ltbb
+
 qipopt_F.o: qipopt_F.hpp qipopt_F.cpp
 	$(CXX) $(CXXFLAGS) -c $^
 
@@ -34,4 +40,4 @@ qipopt: qipopt.o qipopt_F.o
 	$(CXX) $(CXXFLAGS) -o qipopt $^ -fopenmp -lfftw3_omp -lfftw3 -lm -lcnpy -lz -ltbb
 
 clean:
-	rm -f pseudospec pseudospec.o nagd nagd.o sgd sgd.o potential.hpp.gch potential.o config.hpp.gch qipopt qipopt.o
+	rm -f pseudospec pseudospec.o nagd nagd.o sgd sgd.o potential.hpp.gch potential.o config.hpp.gch qipopt qipopt.o subgrad subgrad.o
