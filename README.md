@@ -45,7 +45,7 @@ sudo ldconfig
 
 ### Optimizing for one function
 First, define the potential function in a `.cpp` file (refer to `func/nonsmooth/l2.cpp` for example). The potential will be defined on [`-L`,`L`)^`dim` where `L` and `dim` specified in the corresponding `.cpp` file.
-The following shell script will run solvers (QHD and NAGD) to find the global minimum of the potential function:
+The following shell script will run solvers (QHD, NAGD and LFMSGD) to find the global minimum of the potential function:
 `bash ./run_all.sh <func_cpp_path> <num_cells> <T> <dt> <par> <tot_steps> <learning_rate> <sample_number>`
 -   `func_cpp_path` gives the path of the `.cpp` file for the potential function.
 -   `num_cells` dictates the number of cells in each dimension due to spatial discretization in QHD. 
@@ -55,9 +55,10 @@ The following shell script will run solvers (QHD and NAGD) to find the global mi
 -   `tot_steps` is the total number of steps for the subgradient method solver.
 -   `learning_rate` controls the learning rate of the subgradient method. *The recommended value is $L/G$ where $L$ is `L` and $G$ is the Lipschitz constant of the potential function.*
 -   `sample_number` is the number of samples used in subgradient method solver for deriving probability distributions.
+-   `noise_level` controls how much noise is added in Learning-rate-free Momentum SGD. The recommended range is $[0.1G,10G]$.
 
 Example:
-`./run_all.sh func/nonsmooth/l2.cpp 256 10 0.001 1 10000 1 10000`
+`./run_all.sh func/nonsmooth/1d_find_needle.cpp 256 10 0.001 1 10000 1 1000 1`
 
 To visualize the result, simply use the Python script:
 `python3 plot_result.py`

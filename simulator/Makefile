@@ -30,6 +30,12 @@ subgrad.o: subgrad.cpp config.hpp
 subgrad: subgrad.o potential.o
 	$(CXX) $(CXXFLAGS) -o subgrad $^ -fopenmp -lm -lcnpy -lz -ltbb
 
+lfmsgd.o: lfmsgd.cpp config.hpp
+	$(CXX) $(CXXFLAGS) -c $^ -fopenmp
+
+lfmsgd: lfmsgd.o potential.o
+	$(CXX) $(CXXFLAGS) -o lfmsgd $^ -fopenmp -lm -lcnpy -lz -ltbb
+
 qipopt_F.o: qipopt_F.hpp qipopt_F.cpp
 	$(CXX) $(CXXFLAGS) -c $^
 
@@ -40,4 +46,4 @@ qipopt: qipopt.o qipopt_F.o
 	$(CXX) $(CXXFLAGS) -o qipopt $^ -fopenmp -lfftw3_omp -lfftw3 -lm -lcnpy -lz -ltbb
 
 clean:
-	rm -f pseudospec pseudospec.o nagd nagd.o sgd sgd.o potential.hpp.gch potential.o config.hpp.gch qipopt qipopt.o subgrad subgrad.o
+	rm -f pseudospec pseudospec.o nagd nagd.o sgd sgd.o potential.hpp.gch potential.o config.hpp.gch qipopt qipopt.o subgrad subgrad.o lfmsgd lfmsgd.o
