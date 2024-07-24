@@ -352,6 +352,8 @@ void pseudospec(const int dim, const int len, const double L, const double T,
     npz_save("../result/pseudospec.npz", "par", &par, {1}, "a");
     npz_save("../result/pseudospec.npz", "len", &len, {1}, "a");
     npz_save("../result/pseudospec.npz", "dim", &dim, {1}, "a");
+    npz_save("../result/pseudospec.npz", "L", &L, {1}, "a");
+    npz_save("../result/pseudospec.npz", "V", V, {(unsigned int) size}, "a");
 }
 
 int main(int argc, char **argv)

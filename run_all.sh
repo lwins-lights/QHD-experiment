@@ -13,9 +13,9 @@ mkdir -p result
 cp $fcp simulator/potential.cpp
 cd simulator
 make pseudospec subgrad lfmsgd
-./lfmsgd $ts $nl $par $sn
 ./pseudospec $len $tot $dt $par
 ./subgrad $ts $lr $par $sn 
+./lfmsgd $ts $nl $par $sn
 make clean
 cd ..
 
