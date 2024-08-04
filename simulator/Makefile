@@ -1,49 +1,25 @@
-all: pseudospec nagd sgd subgrad
+all: pseudospec subgrad lfmsgd
 
 CXX := g++
 CXXFLAGS := -O3 --std=c++17
 
-potential.o: potential.hpp potential.cpp
-	$(CXX) $(CXXFLAGS) -c $^
+#potential.o: potential.cpp potential_util.cpp potential.hpp
+#	$(CXX) $(CXXFLAGS) -c $^
 
-pseudospec.o: pseudospec.cpp config.hpp
-	$(CXX) $(CXXFLAGS) -c $^ -fopenmp
+#pseudospec.o: pseudospec.cpp config.hpp
+#	$(CXX) $(CXXFLAGS) -c $^ -fopenmp
 
-pseudospec: pseudospec.o potential.o
+#pseudospec: pseudospec.o potential.o
+#	$(CXX) $(CXXFLAGS) -o pseudospec $^ -fopenmp -lfftw3_omp -lfftw3 -lm -lcnpy -lz -ltbb
+
+pseudospec: pseudospec.cpp config.hpp potential.cpp potential_util.cpp potential.hpp
 	$(CXX) $(CXXFLAGS) -o pseudospec $^ -fopenmp -lfftw3_omp -lfftw3 -lm -lcnpy -lz -ltbb
 
-nagd.o: nagd.cpp config.hpp
-	$(CXX) $(CXXFLAGS) -c $^ -fopenmp
-
-nagd: nagd.o potential.o
-	$(CXX) $(CXXFLAGS) -o nagd $^ -fopenmp -lm -lcnpy -lz -ltbb
-
-sgd.o: sgd.cpp config.hpp
-	$(CXX) $(CXXFLAGS) -c $^ -fopenmp
-
-sgd: sgd.o potential.o
-	$(CXX) $(CXXFLAGS) -o sgd $^ -fopenmp -lm -lcnpy -lz -ltbb
-
-subgrad.o: subgrad.cpp config.hpp
-	$(CXX) $(CXXFLAGS) -c $^ -fopenmp
-
-subgrad: subgrad.o potential.o
+subgrad: subgrad.cpp config.hpp potential.cpp potential_util.cpp potential.hpp
 	$(CXX) $(CXXFLAGS) -o subgrad $^ -fopenmp -lm -lcnpy -lz -ltbb
 
-lfmsgd.o: lfmsgd.cpp config.hpp
-	$(CXX) $(CXXFLAGS) -c $^ -fopenmp
-
-lfmsgd: lfmsgd.o potential.o
+lfmsgd: lfmsgd.cpp config.hpp potential.cpp potential_util.cpp potential.hpp
 	$(CXX) $(CXXFLAGS) -o lfmsgd $^ -fopenmp -lm -lcnpy -lz -ltbb
 
-qipopt_F.o: qipopt_F.hpp qipopt_F.cpp
-	$(CXX) $(CXXFLAGS) -c $^
-
-qipopt.o: qipopt.cpp config.hpp
-	$(CXX) $(CXXFLAGS) -c $^ -fopenmp
-
-qipopt: qipopt.o qipopt_F.o
-	$(CXX) $(CXXFLAGS) -o qipopt $^ -fopenmp -lfftw3_omp -lfftw3 -lm -lcnpy -lz -ltbb
-
 clean:
-	rm -f pseudospec pseudospec.o nagd nagd.o sgd sgd.o potential.hpp.gch potential.o config.hpp.gch qipopt qipopt.o subgrad subgrad.o lfmsgd lfmsgd.o
+	rm -f pseudospec subgrad lfmsgd

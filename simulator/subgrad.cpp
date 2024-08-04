@@ -117,13 +117,13 @@ void grad(const int dim, const double stepsize, const double L,
         V is given by get_potential()
     */
 
-    const double V = get_potential(x);
+    const double V = get_potential(x, L);
     double x_new[dim];
     double V_new;
     
     for (int i = 0; i < dim; i++) {
         add_delta(x, i, stepsize, x_new, L, dim);
-        V_new = get_potential(x_new);
+        V_new = get_potential(x_new, L);
         ret[i] = (V_new - V) / stepsize;
     }
 }
@@ -214,10 +214,10 @@ void subgrad(const double L, const int dim, const int tot_steps,
         #pragma omp parallel for private(temp) reduction(+: expected_pot)
         for (int id = 0; id < num; id++) {
             /* evaluate potential */
-            cur_pot[id] = get_potential(x[id]);
+            cur_pot[id] = get_potential(x[id], L);
 
             /* load subgradient to temp */
-            get_subgradient(x[id], temp);
+            get_subgradient(x[id], temp, L);
 
             /* x' = x - lr * temp */
             scalar_mul(temp, lr, dim);
@@ -259,18 +259,18 @@ void subgrad(const double L, const int dim, const int tot_steps,
 
 int main(int argc, char **argv)
 {
-    if (argc != 5) {
-        perror("Expected arguments: ./subgrad <tot_steps> <learning_rate> <par> <sample_number>");
+    if (argc != 6) {
+        perror("Expected arguments: ./subgrad <tot_steps> <learning_rate> <par> <sample_number> <L>");
         exit(EXIT_FAILURE);
     }
     const int tot_steps = stoi(argv[1]);
     const double learning_rate = stod(argv[2]);
     const int par = stoi(argv[3]);
     const int sample_number = stoi(argv[4]);
+    const double L = stod(argv[5]);
 
-    double L;
     int dim;
-    get_potential_params(L, dim);
+    get_potential_params(dim);
 
     printf("L=%f, dim=%d\n", L, dim);
     printf("tot_steps=%d, learning_rate=%f, par=%d, sample_number=%d\n", tot_steps, learning_rate, par, sample_number);

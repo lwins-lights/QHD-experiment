@@ -114,7 +114,7 @@ void load_potential_to_array(double *V, const int len, const double L, const int
             /* map [0, len) to [-L, L) */
             x[j] = (double) v[j] * 2 * L / len - L;
         }
-        V[i] = get_potential(x);
+        V[i] = get_potential(x, L);
     }
 }
 
@@ -358,18 +358,18 @@ void pseudospec(const int dim, const int len, const double L, const double T,
 
 int main(int argc, char **argv)
 {
-    if (argc != 5) {
-        perror("Expected arguments: ./pseudospec <len> <T> <dt> <par>");
+    if (argc != 6) {
+        perror("Expected arguments: ./pseudospec <len> <T> <dt> <par> <L>");
         exit(EXIT_FAILURE);
     }
     const int len = stoi(argv[1]);
     const double T = stod(argv[2]);
     const double dt = stod(argv[3]);
     const int par = stoi(argv[4]);
+    const double L = stod(argv[5]);
 
-    double L;
     int dim;
-    get_potential_params(L, dim);
+    get_potential_params(dim);
 
     const int size = pow(len, dim);
     double V[size];
