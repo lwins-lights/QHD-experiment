@@ -8,6 +8,7 @@
 #include "config.hpp"
 #include <cnpy.h>
 #include <random>
+#include <string.h>
 
 using namespace std;
 using namespace cnpy;
@@ -47,27 +48,6 @@ void vec_plus(const double *a, const double *b, double *c, const int size) {
     }
 }
 
-void vec_copy(const double *a, double *b, const int size, const double L) {
-    /*
-        b := a
-        coordinates circular on [-L, L)
-    */
-
-    double temp;
-
-    for (int i = 0; i < size; i++) {
-        b[i] = a[i];
-
-        /* map [-L, L) to [0, 1) */
-        temp = (b[i] + L) / 2 / L;
-
-        temp = temp - floor(temp);
-
-        /* map back */
-        b[i] = temp * 2 * L - L;
-    }
-}
-
 void scalar_mul(double *a, const double k,  const int size) {
     /*
         a := ka
@@ -91,40 +71,6 @@ void int_to_coord(const int l, int *x, const int dim, const int len) {
     for (int i = 0; i < dim; i++) {
         x[i] = temp % len;
         temp /= len;
-    }
-}
-
-void add_delta(const double *x, const int i, const double d,
-               double *x_new, const double L, const int size) {
-    /*
-        add d*\delta_i to vector x
-        coordinates circular on [-L, L)
-    */
-    
-    for (int j = 0; j < size; j++) {
-        x_new[j] = x[j];
-    }
-    x_new[i] += d;
-    if (x_new[i] >= L) {
-        x_new[i] -= 2 * L;
-    }
-}
-
-void grad(const int dim, const double stepsize, const double L, 
-          const double *x, double *ret) {
-    /*
-        save \nabla V to ret[]
-        V is given by get_potential()
-    */
-
-    const double V = get_potential(x, L);
-    double x_new[dim];
-    double V_new;
-    
-    for (int i = 0; i < dim; i++) {
-        add_delta(x, i, stepsize, x_new, L, dim);
-        V_new = get_potential(x_new, L);
-        ret[i] = (V_new - V) / stepsize;
     }
 }
 
@@ -224,7 +170,7 @@ void subgrad(const double L, const int dim, const int tot_steps,
             vec_minus(x[id], temp, x_new[id], dim);
 
             /* update */
-            vec_copy(x_new[id], x[id], dim, L);
+            memcpy(x[id], x_new[id], sizeof(x[id]));
         }
 
         /* print progress bar */

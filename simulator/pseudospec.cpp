@@ -98,21 +98,34 @@ void hadamard_product(comp *A, comp *B, comp *C, int size) {
     }
 }
 
+double frac(double x) {
+    /*
+        return the fractional part of x, i.e., {x}, for any x >= 0
+    */
+    return x - int(x);
+}
+
 void load_potential_to_array(double *V, const int len, const double L, const int dim) {
     
     int i;
 
     const int size = pow(len, dim);
+    const double stepsize = 2 * L / len;
 
     int v[dim];
-    double x[dim];
+    double x[dim], pinned[dim], offset[dim];
+
+    get_pinned_point(pinned, L);
+    for (int i = 0; i < dim; i++) {
+        offset[i] = frac((pinned[i] + L) / stepsize) * stepsize;
+    }
 
     #pragma omp parallel for private(i, v, x)
     for (i = 0; i < size; i++) {
         int_to_coord(i, v, dim, len);
         for (int j = 0; j < dim; j++) {
             /* map [0, len) to [-L, L) */
-            x[j] = (double) v[j] * 2 * L / len - L;
+            x[j] = (double) v[j] * stepsize - L + offset[j];
         }
         V[i] = get_potential(x, L);
     }

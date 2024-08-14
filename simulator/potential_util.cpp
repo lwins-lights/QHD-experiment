@@ -7,6 +7,17 @@ void get_potential_params(int &var_dim) {
     var_dim = dim;
 }
 
+void get_pinned_point(double *ret, double L) {
+    double scale[dim];              // the scaling factor from x to z
+    double offset[dim];             // the offset factor from x to z
+
+    for (int i = 0; i < dim; i++) {
+        scale[i] = (ub[i] - lb[i]) / (2 * L * compress_coef);
+        offset[i] = (ub[i] + lb[i]) / 2;
+        ret[i] = pinned[i] * scale[i] + offset[i];
+    }
+}
+
 double get_potential(const double *x, double L) {
     double z[dim];                  // true coordinates to be mapped
     double e[dim];                  // how far it is from outside the bound
