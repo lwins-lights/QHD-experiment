@@ -1,4 +1,4 @@
-all: pseudospec subgrad lfmsgd
+all: pseudospec subgrad lfmsgd gradtest
 
 CXX := g++
 CXXFLAGS := -O3 --std=c++17
@@ -21,5 +21,8 @@ subgrad: subgrad.cpp config.hpp potential.cpp potential_util.cpp potential.hpp
 lfmsgd: lfmsgd.cpp config.hpp potential.cpp potential_util.cpp potential.hpp
 	$(CXX) $(CXXFLAGS) -o lfmsgd $^ -fopenmp -lm -lcnpy -lz -ltbb
 
+gradtest: gradtest.cpp config.hpp potential.cpp potential_util.cpp potential.hpp
+	$(CXX) $(CXXFLAGS) -o gradtest $^ -lm -lz
+
 clean:
-	rm -f pseudospec subgrad lfmsgd
+	rm -f pseudospec subgrad lfmsgd gradtest
