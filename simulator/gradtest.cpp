@@ -71,8 +71,13 @@ void gradtest(const double L, const double eps, const int num) {
         for (int j = 0; j < dim; j++) {
             temp = abs(xd_subg[j] - xd_disc[j]);
             maxtemp = max(temp, maxtemp);
-            if (temp > eps || temp != temp) {
+            if (temp == maxtemp) {
                 //printf("DEBUG: discrepency: %f ===> %f VS %f\n", temp, xd_subg[j], xd_disc[j]);
+                printf("At point ( ");
+                for (int i = 0; i < dim; i++) {
+                    printf("%.4f ", x[i]);
+                }
+                printf(") coord %d:\n oracle = %.8f <> calc = %.8f\n", j, xd_subg[j], xd_disc[j]);
                 err_cnt += 1;
             }
         }

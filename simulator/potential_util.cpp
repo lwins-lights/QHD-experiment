@@ -14,7 +14,7 @@ void get_pinned_point(double *ret, double L) {
     for (int i = 0; i < dim; i++) {
         scale[i] = (ub[i] - lb[i]) / (2 * L * compress_coef);
         offset[i] = (ub[i] + lb[i]) / 2;
-        ret[i] = pinned[i] * scale[i] + offset[i];
+        ret[i] = (pinned[i] - offset[i]) / scale[i];
     }
 }
 
