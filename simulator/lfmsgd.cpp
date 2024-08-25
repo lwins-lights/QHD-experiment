@@ -48,6 +48,27 @@ void vec_plus(const double *a, const double *b, double *c, const int size) {
     }
 }
 
+void vec_copy(const double *a, double *b, const int size, const double L) {
+    /*
+        b := a
+        coordinates circular on [-L, L)
+    */
+
+    double temp;
+
+    for (int i = 0; i < size; i++) {
+        b[i] = a[i];
+
+        /* map [-L, L) to [0, 1) */
+        temp = (b[i] + L) / 2 / L;
+
+        temp = temp - floor(temp);
+
+        /* map back */
+        b[i] = temp * 2 * L - L;
+    }
+}
+
 double vec_norm(const double *a, const int size) {
     /*
         return ||a||
@@ -206,6 +227,7 @@ void lfmsgd(const double L, const int dim, const int tot_steps,
             vec_minus(x[id], temp, x_new[id], dim);
 
             /* let x := x_ for the next rotation */
+            //vec_copy(x_new[id], x[id], dim, L);
             memcpy(x[id], x_new[id], sizeof(x[id]));
             memcpy(m[id], m_new[id], sizeof(m[id]));
 

@@ -18,7 +18,11 @@ def main(args):
 
     # plot init
     dpi = mpl.rcParams['figure.dpi']
-    f, (e_plt, p_plt) = plt.subplots(2, 1, figsize=(800/dpi, 900/dpi))
+    #f, (e_plt, p_plt, d_plt) = plt.subplots(3, 1, figsize=(800/dpi, 900/dpi))
+    plt.rcParams["figure.figsize"] = (1600/dpi, 900/dpi)
+    e_plt = plt.subplot(2, 2, 1)
+    p_plt = plt.subplot(2, 2, 2)
+    d_plt = plt.subplot(2, 1, 2)
     palette = color_palette("husl", len(L_list))
 
     run(["mkdir", "-p", result_path])
@@ -26,6 +30,7 @@ def main(args):
     run(["make", "pseudospec"], cwd=simulator_path)
     for i, L in enumerate(L_list):
         run(["./pseudospec", str(args.len), str(args.T), str(args.dt), str(args.par), str(L)], cwd=simulator_path)
+
         npz = np.load(os.path.join(result_path, "pseudospec.npz"))
         x = np.arange(0, args.T, args.dt)
         y = npz['expected_potential']
@@ -33,17 +38,42 @@ def main(args):
         e_plt.plot(x, y, label=str(L), color=palette[i])
         p_plt.plot(x, yp, label=str(L), color=palette[i])
 
+        v = npz['V']
+        d = npz['dist']
+        vd = [[v[j], d[j]] for j in range(len(v))]
+        vd.sort(key=lambda p:p[0])
+        v = [p[0] for p in vd]
+        d = [p[1] for p in vd]
+        inc = (v[-1] - v[0]) / (args.ngran - 1)
+        x = []
+        y = []
+        cur_ind = 0
+        for f_low in np.arange(v[0], v[-1] + inc / 2, inc):
+            f_high = f_low + inc
+            cur_prob = 0
+            while cur_ind < len(v) and v[cur_ind] < f_high:
+                cur_prob += d[cur_ind]
+                cur_ind += 1
+            x.append(f_low)
+            y.append(cur_prob * args.ngran)
+        #print((len(x), len(y)))
+        d_plt.plot(x, y, label=str(L), color=palette[i])
+
     # plot style
     e_plt.set_xlabel('time')
     e_plt.set_ylabel('expectation')
     p_plt.set_xlabel('time')
     p_plt.set_ylabel('success probability')
+    d_plt.set_xlabel('returned value')
+    d_plt.set_ylabel('density')
     e_plt.yaxis.tick_right()
     p_plt.yaxis.tick_right()
+    d_plt.yaxis.tick_right()
     e_plt.legend(loc="upper right", title="L", title_fontsize="8")
     #p_plt.legend(loc="lower right", title="L", title_fontsize="8")
-    plt_title = 'QHD on %s\n dt=%f; gran.=%f^%d;' % (args.fpath, args.dt, args.len, npz['dim'][0])
-    f.suptitle(plt_title)
+    plt_title = 'QHD on %s\n dt=%f; gran.=%f^%d\n dist_gran=%d' % (args.fpath, args.dt, args.len, npz['dim'][0], args.ngran)
+    #f.suptitle(plt_title)
+    plt.suptitle(plt_title)
 
     plt.savefig(args.output)
     plt.show()
@@ -57,5 +87,6 @@ if __name__ == '__main__':
     parser.add_argument("--Llist", type=str, required=True, help='sizes of the hypercubes in which QHD runs, separated by commas')
     parser.add_argument("--fpath", type=str, required=True, help='path of the potential function .cpp file')
     parser.add_argument("--output", type=str, default=os.path.join(result_path, "qhd.png"), help='path of the output .png file')
+    parser.add_argument("--ngran", type=int, default=100, help='granularity of the final distribution graph (default = 100)')
     args = parser.parse_args()
     main(args)

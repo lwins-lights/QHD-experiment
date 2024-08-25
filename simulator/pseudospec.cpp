@@ -243,6 +243,15 @@ double prob_at_minimum(const comp *psi, const double *V, const int size,
     return 1 - pow(1 - prob, par);
 }
 
+void compile_distribution(const comp *psi, const int size, double *dist) {
+
+    /* return the distribution when measuring psi */
+
+    for (int i = 0; i < size; i++) {
+        dist[i] = (psi[i] * conj(psi[i])).real();
+    }
+}
+
 double get_minimum(const double *V, const int size) {
     double ret = V[0];
     for (int i = 0; i < size; i++) {
@@ -270,6 +279,7 @@ void pseudospec(const int dim, const int len, const double L, const double T,
     comp kop[size], u[size], psi_new[size], temp[size];
     double time_st, time_ed, t, temp_tot, thr;
     double pot[num_steps], prob_at_min[num_steps];
+    double dist[size];
     fftw_plan plan_ft, plan_ift;
 
     /* n for fftw later */
@@ -352,6 +362,8 @@ void pseudospec(const int dim, const int len, const double L, const double T,
         prob_at_min[step] = prob_at_minimum(psi, V, size, thr, par);
     }
 
+    compile_distribution(psi, size, dist);
+
     /* timing */
     time_ed = omp_get_wtime();
     printf("\n");
@@ -367,6 +379,7 @@ void pseudospec(const int dim, const int len, const double L, const double T,
     npz_save("../result/pseudospec.npz", "dim", &dim, {1}, "a");
     npz_save("../result/pseudospec.npz", "L", &L, {1}, "a");
     npz_save("../result/pseudospec.npz", "V", V, {(unsigned int) size}, "a");
+    npz_save("../result/pseudospec.npz", "dist", dist, {(unsigned int) size}, "a");
 }
 
 int main(int argc, char **argv)
