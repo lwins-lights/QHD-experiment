@@ -18,8 +18,17 @@ double get_obj(const double *x) {
     double x1 = x[0];
     double x2 = x[1];
     double pi = 2*acos(0.0);
+    double t1 = sin(pi * (x1 - 2)) / pi / (x1 - 2);
+    double t2 = sin(pi * (x2 - 2)) / pi / (x2 - 2);
     
-    return (1 - pow(abs((sin(pi*(x1 - 2)))*(sin(pi*(x2 - 2)))/(pi*pi*(x1 -2)*(x2 - 2))), 5))*(2 + (x1 - 7)*(x1 - 7) + 2*(x2 - 7)*(x2 - 7));
+    if (x1 == 2) {
+        t1 = 1;
+    }
+    if (x2 == 2) {
+        t2 = 1;
+    }
+
+    return (1 - pow(abs(t1 * t2), 5))*(2 + (x1 - 7)*(x1 - 7) + 2*(x2 - 7)*(x2 - 7));
 }
 
 void get_obj_subg(const double *x, double *ret) {
