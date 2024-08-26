@@ -1,4 +1,5 @@
 #include <cmath>
+#include <cstdio>
 #include "potential.hpp"
 
 using namespace std;
@@ -41,6 +42,14 @@ double get_potential(const double *x, double L) {
     }
 
     func_val = get_obj(z);
+    if (func_val != func_val) {
+        printf("FATAL ERROR: Objective = NaN at (%f", z[0]);
+        for (int i = 1; i < dim; i++) {
+            printf(" %f", z[i]);
+        }
+        printf(")\n");
+    }
+
     for (int i = 0; i < dim; i++) {
         func_val += abs(e[i]) * slope;
     }
@@ -75,6 +84,21 @@ void get_subgradient(const double *x, double *ret, double L) {
     }
 
     get_obj_subg(z, func_subg);
+    for (int i = 0; i < dim; i++) {
+        if (func_subg[i] != func_subg[i]) {
+            printf("FATAL ERROR: Subgradient = (%f", func_subg[0]);
+            for (int j = 1; j < dim; j++) {
+                printf(" %f", func_subg[j]);
+            }
+            printf(") at (%f", z[0]);
+            for (int j = 1; j < dim; j++) {
+                printf(" %f", z[j]);
+            }
+            printf(")\n");
+            break;
+        }
+    }
+
     for (int i = 0; i < dim; i++) {
         if (abs(e[i]) != 0) {
             func_subg[i] = sgn(e[i]) * slope;
