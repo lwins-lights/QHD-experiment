@@ -10,7 +10,7 @@ const double lb[] = {-500, -500};   // lower bound of the actual function range 
 const double ub[] = {500, 500};     // upper bound
 const double compress_coef = 0.95;  // the actual function will be compressed into a hypercube "bound": (compress_coef * [-L,L])^dim
 const double slope = 10;             // specifies how fast the encapsulated function will grow out of the "bound"
-
+const double pinned[] = {0, 0};     // *** ERRORNEOUS: THIS NEEDS TO BE FIXED LATER ***
 
 double get_obj(const double *x) {
     double x1 = x[0];

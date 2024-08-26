@@ -140,6 +140,8 @@ void subgrad(const double L, const int dim, const int tot_steps,
     default_random_engine gen;
     //normal_distribution<double> gaussian(0, noise_level * sqrt(dt) / sqrt(dim));
     uniform_real_distribution<double> uniform(0, 1);
+
+    gen.seed(0);
     
     /* 
      * run subgrad with random samples in the hypercube
@@ -201,6 +203,7 @@ void subgrad(const double L, const int dim, const int tot_steps,
     npz_save("../result/subgrad.npz", "learning_rate", &learning_rate, {1}, "a");
     npz_save("../result/subgrad.npz", "par", &par, {1}, "a");
     npz_save("../result/subgrad.npz", "sample_number", &sample_number, {1}, "a");
+    npz_save("../result/subgrad.npz", "samples", cur_pot, {(unsigned int) sample_number}, "a");
 }
 
 int main(int argc, char **argv)

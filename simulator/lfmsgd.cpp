@@ -170,6 +170,8 @@ void lfmsgd(const double L, const int dim, const int tot_steps,
     default_random_engine gen;
     normal_distribution<double> gaussian(0, noise_level);   // (mean, stddev)
     uniform_real_distribution<double> uniform(0, 1);
+
+    gen.seed(0);
     
     /* 
      * run lfmsgd with random samples in the hypercube
@@ -199,7 +201,7 @@ void lfmsgd(const double L, const int dim, const int tot_steps,
             vec_minus(x[id], x_init[id], temp, dim);
             temp_val = vec_norm(temp, dim);
             if (temp_val > mu[id]) {
-                mu[id] = temp_val;
+                mu[id] = min(temp_val, 2 * L * sqrt(dim));   // cap mu by the largest distance possible in the function domain
             } 
             if (step == 0) {
                 eta = lfmsgd_eps;
@@ -265,6 +267,7 @@ void lfmsgd(const double L, const int dim, const int tot_steps,
     npz_save("../result/lfmsgd.npz", "noise_level", &noise_level, {1}, "a");
     npz_save("../result/lfmsgd.npz", "par", &par, {1}, "a");
     npz_save("../result/lfmsgd.npz", "sample_number", &sample_number, {1}, "a");
+    npz_save("../result/lfmsgd.npz", "samples", cur_pot, {(unsigned int) sample_number}, "a");
 }
 
 int main(int argc, char **argv)
