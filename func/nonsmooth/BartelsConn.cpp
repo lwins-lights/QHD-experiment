@@ -10,9 +10,9 @@ const double lb[] = {-500, -500};   // lower bound of the actual function range 
 const double ub[] = {500, 500};     // upper bound
 const double compress_coef = 0.95;  // the actual function will be compressed into a hypercube "bound": (compress_coef * [-L,L])^dim
 const double slope = 100;             // specifies how fast the encapsulated function will grow out of the "bound"
+const double pinned[] = {0, 0}; // the pinned point will be guaranteed to be picked by the QHD discretization
 
 double get_obj(const double *x) {
-    // Shift the bounds to be around the origin
     double x1 = x[0];
     double x2 = x[1];
     
@@ -20,7 +20,6 @@ double get_obj(const double *x) {
 }
 
 void get_obj_subg(const double *x, double *ret) {
-    // Shift the bounds to be around the origin
     double x1 = x[0];
     double x2 = x[1];
 
@@ -50,7 +49,7 @@ void get_obj_subg(const double *x, double *ret) {
     } else if (abs1 < 0 && abs2 < 0 && abs3 >= 0) {
         ret[0] = -2*x1 - x2 - cos(x1);
         ret[1] = -2*x2 - x1 - sin(x2);
-    } else if (abs1 < 0 && abs2 < 0 && abs3 < 0) {
+    } else {
         ret[0] = -2*x1 - x2 - cos(x1);
         ret[1] = -2*x2 - x1 + sin(x2);
     }

@@ -14,7 +14,6 @@ const double pinned[] = {9.646157266349, 9.646157266349}; // the pinned point wi
 
 
 double get_obj(const double *x) {
-    // Shift the bounds to be around the origin
     double x1 = x[0];
     double x2 = x[1];
     double pi = 2*acos(0.0);
@@ -23,7 +22,6 @@ double get_obj(const double *x) {
 }
 
 void get_obj_subg(const double *x, double *ret) {
-    // Shift the bounds to be around the origin
     double x1 = x[0];
     double x2 = x[1];
     double pi = 2*acos(0.0);
@@ -33,13 +31,13 @@ void get_obj_subg(const double *x, double *ret) {
     // Calculate subgradient based on the cases
     if (abs1 >= 0) {
         ret[0] = x1*exp(2*(1-sqrt(x1*x1 + x2*x2)/pi))*cos(x1)*cos(x1)*cos(x2)*cos(x2) / (15*pi*sqrt(x1*x1 + x2*x2)) + 
-                    (1/15)*exp(2*(1-sqrt(x1*x1 + x2*x2)/pi))*sin(x1)*cos(x1)*cos(x2)*cos(x2);
+                    (1.0/15.0)*exp(2*(1-sqrt(x1*x1 + x2*x2)/pi))*sin(x1)*cos(x1)*cos(x2)*cos(x2);
         ret[1] = x2*exp(2*(1-sqrt(x2*x2 + x1*x1)/pi))*cos(x2)*cos(x2)*cos(x1)*cos(x1) / (15*pi*sqrt(x2*x2 + x1*x1)) + 
-                    (1/15)*exp(2*(1-sqrt(x2*x2 + x1*x1)/pi))*sin(x2)*cos(x2)*cos(x1)*cos(x1);
+                    (1.0/15.0)*exp(2*(1-sqrt(x2*x2 + x1*x1)/pi))*sin(x2)*cos(x2)*cos(x1)*cos(x1);
     } else {
         ret[0] = -x1*exp(2*(-1+sqrt(x1*x1 + x2*x2)/pi))*cos(x1)*cos(x1)*cos(x2)*cos(x2) / (15*pi*sqrt(x1*x1 + x2*x2)) + 
-                    (1/15)*exp(2*(-1+sqrt(x1*x1 + x2*x2)/pi))*sin(x1)*cos(x1)*cos(x2)*cos(x2);
+                    (1.0/15.0)*exp(2*(-1+sqrt(x1*x1 + x2*x2)/pi))*sin(x1)*cos(x1)*cos(x2)*cos(x2);
         ret[1] = -x2*exp(2*(-1+sqrt(x2*x2 + x1*x1)/pi))*cos(x2)*cos(x2)*cos(x1)*cos(x1) / (15*pi*sqrt(x2*x2 + x1*x1)) + 
-                    (1/15)*exp(2*(-1+sqrt(x2*x2 + x1*x1)/pi))*sin(x2)*cos(x2)*cos(x1)*cos(x1);
+                    (1.0/15.0)*exp(2*(-1+sqrt(x2*x2 + x1*x1)/pi))*sin(x2)*cos(x2)*cos(x1)*cos(x1);
     } 
 }

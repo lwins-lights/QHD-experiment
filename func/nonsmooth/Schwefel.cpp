@@ -18,7 +18,6 @@ double get_obj(const double *x) {
 }
 
 void get_obj_subg(const double *x, double *ret) {
-    // Shift the bounds to be around the origin
     double x1 = x[0];
 
     if (x1 >= 0) {

@@ -13,7 +13,6 @@ const double slope = 100;             // specifies how fast the encapsulated fun
 const double pinned[] = {0, 0};     // *** ERRORNEOUS: THIS NEEDS TO BE FIXED LATER ***
 
 double get_obj(const double *x) {
-    // Shift the bounds to be around the origin
     double x1 = x[0];
     double x2 = x[1];
     double pi = 2*acos(0.0);

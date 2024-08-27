@@ -61,7 +61,7 @@ void get_obj_subg(const double *x, double *ret) {
                 (x1*cos(sqrt(abs2))*cos(sqrt(-abs1))) / (2*sqrt(abs2)) - 
                 (x2+1)*cos(sqrt(abs2))*cos(sqrt(-abs1)) / (2*sqrt(-abs1)) + 
                 sin(sqrt(-abs1))*cos(sqrt(abs2));
-    } else if (abs1 < 0 && abs2 < 0) {
+    } else {
         ret[0] = -(x2+1)*sin(sqrt(-abs2))*sin(sqrt(-abs1)) / (2*sqrt(-abs2)) + 
                 (x1*sin(sqrt(-abs2))*sin(sqrt(-abs1))) / (2*sqrt(-abs1)) + 
                 (x1*cos(sqrt(-abs2))*cos(sqrt(-abs1))) / (2*sqrt(-abs2)) - 

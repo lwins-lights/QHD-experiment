@@ -14,7 +14,7 @@ const double slope = 5;             // specifies how fast the encapsulated funct
 const double pinned[] = {0, 0}; // the pinned point will be guaranteed to be picked by the QHD discretization
 
 double get_obj(const double *x) {
-    // Shift the bounds to be around the origin
+    
     double x1 = x[0];
     double x2 = x[1];
     

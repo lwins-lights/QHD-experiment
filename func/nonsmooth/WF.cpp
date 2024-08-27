@@ -14,7 +14,7 @@ const double slope = 10;             // specifies how fast the encapsulated func
 const double pinned[] = {0, 0};     // *** ERRORNEOUS: THIS NEEDS TO BE FIXED LATER ***
 
 double get_obj(const double *x) {
-    // Set bound 
+    
     double x1 = x[0];
     double x2 = x[1]; 
     
@@ -33,19 +33,19 @@ void get_obj_subg(const double *x, double *ret) {
 
     double term1 = 0.5 * (x1 + 10*x1/(x1+0.1) + 2*x2*x2);
     double term2 = 0.5 * (-1*x1 + 10*x1/(x1+0.1) + 2*x2*x2);
-    double term3 = 0.5 * (x1 - 10*x1/(x1+0.1) + 2*x2*x2);
+    double term3 = 0.5 * (x1 - 10*x1/(x1+0.1) - 2*x2*x2);
 
     if (term1 >= term2 && term1 >= term3) {
         // gradient for term1
-        ret[0] = (0.5*x1*x1 + 0.1*x1 + 0.505) / pow(x1 + 0.1, 2);
+        ret[0] = (0.5*x1*x1 +  0.1*x1 + 0.505) / pow(x1 + 0.1, 2);
         ret[1] = 2*x2;
     } else if (term2 >= term1 && term2 >= term3) {
         // gradient for term2
-        ret[0] = (-0.5*x1*x1 - 0.1*x1 + 0.495) / pow(x1 + 0.1, 2);
+        ret[0] = (-0.5*x1*x1 -  0.1*x1 + 0.495) / pow(x1 + 0.1, 2);
         ret[1] = 2*x2;
-    } else if (term3 >= term2 && term3 >= term1) {
+    } else {
         // gradient for term3
-        ret[0] = (0.5*x1*x1 + 0.1*x1 - 0.495) / pow(x1 + 0.1, 2);
-        ret[1] = 2*x2;
+        ret[0] = (0.5*x1*x1 +  0.1*x1 - 0.495) / pow(x1 + 0.1, 2);
+        ret[1] = -2*x2;
     }
 }
