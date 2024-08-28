@@ -10,7 +10,7 @@ const double lb[] = {1e-6, 1e-6};   // lower bound of the actual function range 
 const double ub[] = {10, 10};       // upper bound
 const double compress_coef = 1.00;  // the actual function will be compressed into a hypercube "bound": (compress_coef * [-L,L])^dim
 const double slope = 1;             // specifies how fast the encapsulated function will grow out of the "bound"
-const double pinned[] = {0.0, 0.0}; // the pinned point will be guaranteed to be picked by the QHD discretization
+const double pinned[] = {1.60086, 0.468498}; // the pinned point will be guaranteed to be picked by the QHD discretization
 
 double get_obj(const double *x) {
     double x1 = x[0];

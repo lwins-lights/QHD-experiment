@@ -7,10 +7,10 @@ using namespace std;
 const int dim = 2;
 
 /* parameters for encapsulation */
-const double lb[] = {-15, -15};   // lower bound of the actual function range for each dimension
+const double lb[] = {-10, -10};   // lower bound of the actual function range for each dimension
 const double ub[] = {15, 15};     // upper bound
 const double compress_coef = 0.95;  // the actual function will be compressed into a hypercube "bound": (compress_coef * [-L,L])^dim
-const double slope = 5;             // specifies how fast the encapsulated function will grow out of the "bound"
+const double slope = 10;             // specifies how fast the encapsulated function will grow out of the "bound"
 const double pinned[] = {0, 0}; // the pinned point will be guaranteed to be picked by the QHD discretization
 
 double get_obj(const double *x) {

@@ -11,36 +11,35 @@ const double lb[] = {-5, -5};   // lower bound of the actual function range for 
 const double ub[] = {5, 5};     // upper bound
 const double compress_coef = 0.95;  // the actual function will be compressed into a hypercube "bound": (compress_coef * [-L,L])^dim
 const double slope = 100;             // specifies how fast the encapsulated function will grow out of the "bound"
-const double pinned[] = {1.0, 1.0}; // the pinned point will be guaranteed to be picked by the QHD discretization
-
+const double pinned[] = {0.0, 0.0}; // the pinned point will be guaranteed to be picked by the QHD discretization
 
 double get_obj(const double *x) {
     double x1 = x[0];
     double x2 = x[1];
 
-    double term1 = pow(x1, 4) + pow(x2, 2);
-    double term2 = pow(2-x1, 2) + pow(2-x2, 2);
-    double term3 = 2*exp(-x1 + x2);
+    double term1 = (x1+4)*(x1+4)+ x2*x2;
+    double term2 = (x1-4)*(x1-4)+ x2*x2;
+    double term3 = x1*x1 + (x2+2)*(x2+2);
 
-    return max({term1, term2, term3}) - 2;
+    return max({term1, term2, term3}) - 16;
 }
 
 void get_obj_subg(const double *x, double *ret) {
     double x1 = x[0];
     double x2 = x[1];
 
-    double term1 = pow(x1, 4) + pow(x2, 2);
-    double term2 = pow(2-x1, 2) + pow(2-x2, 2);
-    double term3 = 2*exp(-x1 + x2);
+    double term1 = (x1+4)*(x1+4)+ x2*x2;
+    double term2 = (x1-4)*(x1-4)+ x2*x2;
+    double term3 = x1*x1 + (x2+2)*(x2+2);
 
     if (term1 >= term2 && term1 >= term3) {
-        ret[0] = 4*pow(x1, 3);
+        ret[0] = 2*(x1 + 4);
         ret[1] = 2*x2;
     } else if (term2 >= term1 && term2 >= term3) {
-        ret[0] = 2*(x1 - 2);
-        ret[1] = 2*(x2 - 2);
+        ret[0] = 2*(x1 - 4);
+        ret[1] = 2*x2;
     } else {
-        ret[0] = -2*exp(-x1 + x2);
-        ret[1] = 2*exp(-x1 + x2);
+        ret[0] = 2*x1;
+        ret[1] = 2*(x2+2);
     }
 }
