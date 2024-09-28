@@ -49,12 +49,12 @@ void gradtest(const double L, const double eps, const int num) {
 
     double x[dim], xd_disc[dim], xd_subg[dim];
     int err_cnt = 0;
-    double temp, maxtemp;
+    double temp, maxtemp, tot_lip, max_lip, lip;
 
     default_random_engine gen;
     uniform_real_distribution<double> uniform(0, 1);
 
-    maxtemp = 0;
+    maxtemp = tot_lip = max_lip = 0;
 
     for (int k = 0; k < num; k++) {
 
@@ -67,8 +67,12 @@ void gradtest(const double L, const double eps, const int num) {
         get_subgradient(x, xd_subg, L);
         grad(dim, eps, L, x, xd_disc);
 
+        /* lip = the norm of the gradient at x */
+        lip = 0;
+
         /* comapre */
         for (int j = 0; j < dim; j++) {
+            lip += xd_subg[j] * xd_subg[j];
             temp = abs(xd_subg[j] - xd_disc[j]);
             maxtemp = max(temp, maxtemp);
             if (temp == maxtemp) {
@@ -81,9 +85,17 @@ void gradtest(const double L, const double eps, const int num) {
                 err_cnt += 1;
             }
         }
+
+        /* resolve lip */
+        lip = sqrt(lip);
+        if (lip > max_lip) {
+            max_lip = lip;
+        }
+        tot_lip += lip;
     }
 
     printf("Max discrepency = %.8e\n", maxtemp);
+    printf("Average / Max Lipschitz constant = %.8f / %.8f\n", tot_lip / num, max_lip);
     //printf("Test result: %d/%d erroneous values found.\n", err_cnt, num * dim);
 }
 

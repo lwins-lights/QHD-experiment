@@ -171,6 +171,13 @@ void subgrad(const double L, const int dim, const int tot_steps,
             scalar_mul(temp, lr, dim);
             vec_minus(x[id], temp, x_new[id], dim);
 
+            double newval = get_potential(x_new[id], L);
+            if (id == 999 && newval > 3500 && cur_pot[id] < 3500) {
+                get_subgradient(x[id], temp, L);
+                double subgval = temp[0];
+                printf("id = %d, f(%f)=%f, f'(%f)=%f\n", id, x_new[id][0], newval, x[id][0], subgval);
+            }
+
             /* update */
             memcpy(x[id], x_new[id], sizeof(x[id]));
         }
