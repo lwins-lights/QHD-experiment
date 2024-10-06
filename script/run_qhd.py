@@ -3,8 +3,11 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
+import pickle
+import copy
 from seaborn import color_palette
 from subprocess import run
+from datetime import datetime
 
 # path init
 this_path = os.path.dirname(os.path.realpath(__file__)) 
@@ -28,10 +31,27 @@ def main(args):
     run(["mkdir", "-p", result_path])
     run(["cp", args.fpath, os.path.join(simulator_path, "potential.cpp")])
     run(["make", "pseudospec"], cwd=simulator_path)
-    for i, L in enumerate(L_list):
-        run(["./pseudospec", str(args.len), str(args.T), str(args.dt), str(args.par), str(L)], cwd=simulator_path)
 
-        npz = np.load(os.path.join(result_path, "pseudospec.npz"))
+    try:
+        with open(args.assets, 'rb') as file:
+            assets = pickle.load(file)
+    except (FileNotFoundError, EOFError):
+        assets = {}
+
+    for i, L in enumerate(L_list):
+        arglist = ["./pseudospec", str(args.len), str(args.T), str(args.dt), str(args.par), str(L)]
+        arglist_str = "; ".join(arglist)
+
+        if arglist_str in assets and not args.force:
+            print("Past result found in assets:\narglist   =  %s\ntimestamp =  %s\n" % (arglist_str, assets[arglist_str]["timestamp"]))
+            npz = assets[arglist_str]["data"]
+        else:
+            run(arglist, cwd=simulator_path)
+            npz = np.load(os.path.join(result_path, "pseudospec.npz"))
+            assets[arglist_str] = {}
+            assets[arglist_str]["timestamp"] = datetime.now()
+            assets[arglist_str]["data"] = {key: copy.deepcopy(npz[key]) for key in npz.keys()} # deep copy the data
+        
         x = np.arange(0, args.T, args.dt)
         y = npz['expected_potential']
         yp = npz['probability_at_minimum']
@@ -58,6 +78,9 @@ def main(args):
             y.append(cur_prob * args.ngran)
         #print((len(x), len(y)))
         d_plt.plot(x, y, label=str(L), color=palette[i])
+
+    with open(args.assets, 'wb') as file:
+        pickle.dump(assets, file)
 
     # plot style
     e_plt.set_xlabel('time')
@@ -88,5 +111,7 @@ if __name__ == '__main__':
     parser.add_argument("--fpath", type=str, required=True, help='path of the potential function .cpp file')
     parser.add_argument("--output", type=str, default=os.path.join(result_path, "qhd.png"), help='path of the output .png file')
     parser.add_argument("--ngran", type=int, default=100, help='granularity of the final distribution graph (default = 100)')
+    parser.add_argument("--assets", type=str, default=os.path.join(result_path, "qhd_assets.pkl"), help='path of the assets file')
+    parser.add_argument("--force", action='store_true', default=False, help='force not loading from assets')
     args = parser.parse_args()
     main(args)
