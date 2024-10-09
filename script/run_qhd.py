@@ -39,14 +39,15 @@ def main(args):
         assets = {}
 
     for i, L in enumerate(L_list):
-        arglist = ["./pseudospec", str(args.len), str(args.T), str(args.dt), str(args.par), str(L)]
+        arglist_original = ["./pseudospec", str(args.len), str(args.T), str(args.dt), str(args.par), str(L)]
+        arglist = [args.fpath] + arglist_original
         arglist_str = "; ".join(arglist)
 
         if arglist_str in assets and not args.force:
             print("Past result found in assets:\narglist   =  %s\ntimestamp =  %s\n" % (arglist_str, assets[arglist_str]["timestamp"]))
             npz = assets[arglist_str]["data"]
         else:
-            run(arglist, cwd=simulator_path)
+            run(arglist_original, cwd=simulator_path)
             npz = np.load(os.path.join(result_path, "pseudospec.npz"))
             assets[arglist_str] = {}
             assets[arglist_str]["timestamp"] = datetime.now()
