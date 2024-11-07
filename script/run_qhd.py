@@ -94,7 +94,7 @@ def main(args):
     p_plt.yaxis.tick_right()
     d_plt.yaxis.tick_right()
     e_plt.legend(loc="upper right", title="L", title_fontsize="8", fontsize="8")
-    #p_plt.legend(loc="lower right", title="L", title_fontsize="8")
+    p_plt.legend(loc="upper left", title="L", title_fontsize="8")
     plt_title = 'QHD on %s\n dt=%f; gran.=%f^%d\n dist_gran=%d' % (args.fpath, args.dt, args.len, npz['dim'][0], args.ngran)
     #f.suptitle(plt_title)
     plt.suptitle(plt_title)

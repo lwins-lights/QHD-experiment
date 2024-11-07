@@ -5,12 +5,14 @@ import matplotlib as mpl
 import numpy as np
 from seaborn import color_palette
 from subprocess import run
+import pandas as pd
 
 # path init
 this_path = os.path.dirname(os.path.realpath(__file__)) 
 root_path = os.path.join(this_path, '..')
 result_path = os.path.join(root_path, "result")
 simulator_path = os.path.join(root_path, "simulator")
+data_file_path = os.path.join(result_path, "best_L_combined.csv")
 
 # Constants
 SOLVER_NUM = 3                   # number of solvers to compare
@@ -34,6 +36,11 @@ def main(args):
     p_plt = plt.subplot(2, 2, 2)
     d_plt = plt.subplot(2, 1, 2)
     palette = color_palette("husl", SOLVER_NUM)
+    data = pd.read_csv(data_file_path)
+    row = data[data['Problem'] == func_name]
+    if row.empty:
+        return f"No data found for function: {func_name}"
+    subgrad_L, lfmsgd_L, qhd_L = row[['subgrad_L', 'lfmsgd_L', 'qhd_L']].values[0]
     
     # make
     run(["mkdir", "-p", result_path])
@@ -46,7 +53,7 @@ def main(args):
     time_shared = np.arange(0, T, 1)         # shared time axis for suceess probability and expectation
     
     # run qhd
-    run(["./pseudospec", str(LEN), str(TOTAL_EVOLUTION_TIME), str(DT), str(PAR), str(args.qhd_L)], cwd=simulator_path)
+    run(["./pseudospec", str(LEN), str(TOTAL_EVOLUTION_TIME), str(DT), str(PAR), str(qhd_L)], cwd=simulator_path)
     npz = np.load(os.path.join(result_path, "pseudospec.npz"))
     qhd_y = npz['expected_potential']
     qhd_yp = npz['probability_at_minimum']
@@ -71,7 +78,7 @@ def main(args):
         qhd_density.append(cur_prob * GRAN_NUM)
     
     # run lfmsgd
-    run(["./lfmsgd", str(T), str(NL), str(PAR), str(SAMPLE_NUM), str(args.lfmsgd_L)], cwd=simulator_path)
+    run(["./lfmsgd", str(T), str(NL), str(PAR), str(SAMPLE_NUM), str(lfmsgd_L)], cwd=simulator_path)
     npz = np.load(os.path.join(result_path, "lfmsgd.npz"))
     lfmsgd_y = npz['expected_potential']
     lfmsgd_yp = npz['probability_at_minimum']
@@ -92,7 +99,7 @@ def main(args):
         lfmsgd_density.append(cur_prob * GRAN_NUM)
     
     # run subgrad
-    run(["./subgrad", str(T), str(LR), str(PAR), str(SAMPLE_NUM), str(args.subgrad_L)], cwd=simulator_path)
+    run(["./subgrad", str(T), str(LR), str(PAR), str(SAMPLE_NUM), str(subgrad_L)], cwd=simulator_path)
     npz = np.load(os.path.join(result_path, "subgrad.npz"))
     subgrad_y = npz['expected_potential']
     subgrad_yp = npz['probability_at_minimum']
@@ -138,7 +145,7 @@ def main(args):
     e_plt.legend(loc="upper right", fontsize="8")
     p_plt.legend(loc="upper left", fontsize="8")
     d_plt.legend(loc="upper center", fontsize="8")
-    plt_title = f'QHD ({args.qhd_L}), LFMSGD ({args.lfmsgd_L}), SUBGRAD ({args.subgrad_L}) on {func_name[0].upper() + func_name[1:]}'
+    plt_title = f'QHD ({qhd_L}), LFMSGD ({lfmsgd_L}), SUBGRAD ({subgrad_L}) on {func_name[0].upper() + func_name[1:]}'
     plt.suptitle(plt_title)
 
     plt.savefig(output_path)
@@ -147,8 +154,5 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--fpath", type=str, required=True, help='path of the potential function .cpp file')
-    parser.add_argument("--qhd_L", type=float, required=True, help='size of the hypercube in which QHD runs')
-    parser.add_argument("--lfmsgd_L", type=float, required=True, help='size of the hypercube in which LFMSGD runs')
-    parser.add_argument("--subgrad_L", type=float, required=True, help='size of the hypercube in which SUBGRAD runs')
     args = parser.parse_args()
     main(args)

@@ -21,7 +21,8 @@ make clean
 cd ..
 
 # example command:
-# python script/plot_all.py --fpath func/nonsmooth/.cpp --qhd_L 0.1 --lfmsgd_L 0.1 --subgrad_L 0.1
+# python script/find_best_L.py --fpath func/nonsmooth/.cpp 
+# python script/plot_all.py --fpath func/nonsmooth/.cpp 
 # python script/run_qhd.py --fpath func/nonsmooth/.cpp --Llist 0.1,0.2,0.4,1,2,4,10,20,50,100
 # python script/run_qhd.py --fpath func/nonsmooth/.cpp --Llist 1,2,4,10,25,50,100,250,500,1000,1500,2000
 # python script/run_gradtest.py --fpath func/nonsmooth/.cpp
