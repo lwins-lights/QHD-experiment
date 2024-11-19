@@ -27,10 +27,10 @@ ALPHA = 2                        # rate to shrink gap between L_min and L_max (g
 GAP_THRESHOLD = 1.2              # threshold to stop shrinking gap
 
 def main(args):
-    solvers = {3}    # 1: qhd, 2: subgrad, 3: lfmsgd
-    qhd_L_min, qhd_L_max = 0.1, 100
-    subgrad_L_min, subgrad_L_max = 0.1, 100
-    lfmsgd_L_min, lfmsgd_L_max = 100, 1000
+    solvers = {2}    # 1: qhd, 2: subgrad, 3: lfmsgd
+    qhd_L_min, qhd_L_max = 0.01, 10
+    subgrad_L_min, subgrad_L_max = 1, 1000
+    lfmsgd_L_min, lfmsgd_L_max = 10, 10000
     results = {"qhd_best": None, "subgrad_best": None, "lfmsgd_best": None}
     
     func_name = os.path.splitext(os.path.basename(args.fpath))[0]

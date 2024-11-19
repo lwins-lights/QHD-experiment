@@ -12,7 +12,7 @@ this_path = os.path.dirname(os.path.realpath(__file__))
 root_path = os.path.join(this_path, '..')
 result_path = os.path.join(root_path, "result")
 simulator_path = os.path.join(root_path, "simulator")
-data_file_path = os.path.join(result_path, "best_L_combined.csv")
+data_file_path = os.path.join(result_path, "best_L_automated.csv")
 
 # Constants
 SOLVER_NUM = 3                   # number of solvers to compare
@@ -143,9 +143,9 @@ def main(args):
     p_plt.yaxis.tick_right()
     d_plt.yaxis.tick_right()
     e_plt.legend(loc="upper right", fontsize="8")
-    p_plt.legend(loc="upper left", fontsize="8")
+    p_plt.legend(loc="lower right", fontsize="8")
     d_plt.legend(loc="upper center", fontsize="8")
-    plt_title = f'QHD ({qhd_L}), LFMSGD ({lfmsgd_L}), SUBGRAD ({subgrad_L}) on {func_name[0].upper() + func_name[1:]}'
+    plt_title = f'Performance of QHD (L = {qhd_L}), LFMSGD (L = {lfmsgd_L}), SUBGRAD (L = {subgrad_L}) on {func_name[0].upper() + func_name[1:]}'
     plt.suptitle(plt_title)
 
     plt.savefig(output_path)
