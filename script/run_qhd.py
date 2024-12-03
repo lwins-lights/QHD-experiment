@@ -15,6 +15,10 @@ root_path = os.path.join(this_path, '..')
 result_path = os.path.join(root_path, "result")
 simulator_path = os.path.join(root_path, "simulator")
 
+def vprint(*params):
+    if args.verbose:
+        print(*params)
+
 def main(args):
     # var init
     L_list = [float(x) for x in args.Llist.split(',')]
@@ -28,9 +32,8 @@ def main(args):
     d_plt = plt.subplot(2, 1, 2)
     palette = color_palette("husl", len(L_list))
 
+    compiled = False
     run(["mkdir", "-p", result_path])
-    run(["cp", args.fpath, os.path.join(simulator_path, "potential.cpp")])
-    run(["make", "pseudospec"], cwd=simulator_path)
 
     try:
         with open(args.assets, 'rb') as file:
@@ -47,6 +50,10 @@ def main(args):
             print("Past result found in assets:\narglist   =  %s\ntimestamp =  %s\n" % (arglist_str, assets[arglist_str]["timestamp"]))
             npz = assets[arglist_str]["data"]
         else:
+            if not compiled:
+                run(["cp", args.fpath, os.path.join(simulator_path, "potential.cpp")])
+                run(["make", "pseudospec"], cwd=simulator_path)
+                compiled = True
             run(arglist_original, cwd=simulator_path)
             npz = np.load(os.path.join(result_path, "pseudospec.npz"))
             assets[arglist_str] = {}
@@ -57,6 +64,7 @@ def main(args):
         y = npz['expected_potential']
         yp = npz['probability_at_minimum']
         e_plt.plot(x, y, label=str(L), color=palette[i])
+        vprint("[L=%f]\nFinal obj = %.8f" % (L, y[-1]))
         p_plt.plot(x, yp, label=str(L), color=palette[i])
 
         v = npz['V']
@@ -98,6 +106,10 @@ def main(args):
     plt_title = 'QHD on %s\n dt=%f; gran.=%f^%d\n dist_gran=%d' % (args.fpath, args.dt, args.len, npz['dim'][0], args.ngran)
     #f.suptitle(plt_title)
     plt.suptitle(plt_title)
+    if args.xlogscale:
+        e_plt.set_xscale('log')
+    if args.ylogscale:
+        e_plt.set_yscale('log')
 
     plt.savefig(args.output)
     plt.show()
@@ -114,5 +126,8 @@ if __name__ == '__main__':
     parser.add_argument("--ngran", type=int, default=100, help='granularity of the final distribution graph (default = 100)')
     parser.add_argument("--assets", type=str, default=os.path.join(result_path, "qhd_assets.pkl"), help='path of the assets file')
     parser.add_argument("--force", action='store_true', default=False, help='force not loading from assets')
+    parser.add_argument("--xlogscale", action='store_true', default=False, help='show the x-axis in a log scale for the expection graph')
+    parser.add_argument("--ylogscale", action='store_true', default=False, help='show the y-axis in a log scale for the expection graph')
+    parser.add_argument("--verbose", action='store_true', default=False, help='print more information')
     args = parser.parse_args()
     main(args)
