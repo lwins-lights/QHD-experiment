@@ -21,6 +21,7 @@ make clean
 cd ..
 
 # example command:
+# python script/get_gap_successrate.py --fpath func/nonsmooth/.cpp 
 # python script/find_best_L.py --fpath func/nonsmooth/.cpp 
 # python script/plot_all.py --fpath func/nonsmooth/.cpp 
 # python script/run_qhd.py --fpath func/nonsmooth/.cpp --Llist 0.1,0.2,0.4,1,2,4,10,20,50,100

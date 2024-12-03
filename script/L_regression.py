@@ -35,25 +35,33 @@ def main():
     
     print(f"avg_regression_error: {root_mean_squared_error(best_L_avg, avg_predict_best_L)}")
     print(f"max_regression_error: {root_mean_squared_error(best_L_max, max_predict_best_L)}")
+
+    plt.rcParams['font.family'] = 'Times New Roman'
+    plt.rcParams['font.size'] = 11  
+    plt.rcParams['axes.titlesize'] = 16  
+    plt.rcParams['axes.labelsize'] = 14  
+    plt.rcParams['legend.fontsize'] = 10  
     
-    _, ax = plt.subplots(1, 2, figsize=(12, 5))
-    ax[0].scatter(avg_lipschitz_log, best_L_log_avg, marker='o', c='r')
+    _, ax = plt.subplots(1, 2, figsize=(12, 4.3), gridspec_kw={'wspace': 0.35})
+    ax[0].scatter(avg_lipschitz_log, best_L_log_avg, marker='o', c='r', label="Test Functions")
     # ax[0].scatter(avg_lipschitz, best_L_avg, marker='o', c='r')
-    ax[0].set_xlabel("Average Lipschitz")
-    ax[0].set_ylabel("best_L")
+    ax[0].set_xlabel("log(average Lipschitz)")
+    ax[0].set_ylabel("log(best L)")
     # ax[0].set_title("best_L vs Average Lipschitz ")
     # ax[0].plot(avg_lipschitz, avg_predict_best_L)
-    ax[0].set_title("log best_L vs log Average Lipschitz ")
-    ax[0].plot(avg_lipschitz_log, avg_model.predict(avg_lipschitz_log))
+    ax[0].set_title("Best L vs Average Lipschitz Constant")
+    ax[0].plot(avg_lipschitz_log, avg_model.predict(avg_lipschitz_log), label="Log-Log Regression")
+    ax[0].legend(loc="lower right")
     
-    ax[1].scatter(max_lipschitz_log, best_L_log_max, marker='o', c='r')
+    ax[1].scatter(max_lipschitz_log, best_L_log_max, marker='o', c='r', label="Test Functions")
     # ax[1].scatter(max_lipschitz, best_L_max, marker='o', c='r')
-    ax[1].set_xlabel("Max Lipschitz")
-    ax[1].set_ylabel("best_L")
+    ax[1].set_xlabel("log(max Lipschitz)")
+    ax[1].set_ylabel("log(best L)")
     # ax[1].set_title("best_L vs Max Lipschitz ")
     # ax[1].plot(max_lipschitz, max_predict_best_L)
-    ax[1].set_title("log best_L vs log Max Lipschitz ")
-    ax[1].plot(max_lipschitz_log, max_model.predict(max_lipschitz_log))
+    ax[1].set_title("Best L vs Max Lipschitz Constant")
+    ax[1].plot(max_lipschitz_log, max_model.predict(max_lipschitz_log), label="Log-Log Regression")
+    ax[1].legend(loc="lower right")
     
     plt.savefig(output_path)
     plt.show()

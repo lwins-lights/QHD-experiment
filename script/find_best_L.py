@@ -27,8 +27,8 @@ ALPHA = 2                        # rate to shrink gap between L_min and L_max (g
 GAP_THRESHOLD = 1.2              # threshold to stop shrinking gap
 
 def main(args):
-    solvers = {2}    # 1: qhd, 2: subgrad, 3: lfmsgd
-    qhd_L_min, qhd_L_max = 0.01, 10
+    solvers = {1}    # 1: qhd, 2: subgrad, 3: lfmsgd
+    qhd_L_min, qhd_L_max = 0.1, 100
     subgrad_L_min, subgrad_L_max = 1, 1000
     lfmsgd_L_min, lfmsgd_L_max = 10, 10000
     results = {"qhd_best": None, "subgrad_best": None, "lfmsgd_best": None}
@@ -56,7 +56,7 @@ def main(args):
                 run(["./pseudospec", str(LEN), str(TOTAL_EVOLUTION_TIME), str(DT), str(PAR), str(L_temp)], cwd=simulator_path)
                 npz = np.load(os.path.join(result_path, "pseudospec.npz"))
                 qhd_yp = npz['probability_at_minimum']
-                max_yp = max(qhd_yp)
+                max_yp = qhd_yp[-1]
                 if max_yp > max_success_prob:
                     L_best = L_temp
                     max_success_prob = max_yp
