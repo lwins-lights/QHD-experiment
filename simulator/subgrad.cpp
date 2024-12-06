@@ -128,7 +128,7 @@ void subgrad(const double L, const int dim, const int tot_steps,
     */
 
     const int num = sample_number;
-    const double lr = learning_rate / sqrt(tot_steps);
+    double lr;
     int prog, prog_prev;
     int v[dim];
     double x[num][dim], x_new[num][dim], temp[dim];
@@ -158,6 +158,7 @@ void subgrad(const double L, const int dim, const int tot_steps,
     /* main loop */
     for (int step = 0; step < tot_steps; step++) {
         expected_pot = 0;
+        lr = learning_rate / sqrt(step + 1);
 
         #pragma omp parallel for private(temp) reduction(+: expected_pot)
         for (int id = 0; id < num; id++) {
