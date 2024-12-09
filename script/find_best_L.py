@@ -30,7 +30,7 @@ def main(args):
     solvers = {1}    # 1: qhd, 2: subgrad, 3: lfmsgd
     qhd_L_min, qhd_L_max = 0.1, 100
     subgrad_L_min, subgrad_L_max = 1, 1000
-    lfmsgd_L_min, lfmsgd_L_max = 10, 10000
+    lfmsgd_L_min, lfmsgd_L_max = 0.1, 100
     results = {"qhd_best": None, "subgrad_best": None, "lfmsgd_best": None}
     
     func_name = os.path.splitext(os.path.basename(args.fpath))[0]
