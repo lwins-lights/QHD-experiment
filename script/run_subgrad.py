@@ -28,7 +28,11 @@ def main(args):
     run(["cp", args.fpath, os.path.join(simulator_path, "potential.cpp")])
     run(["make", "subgrad"], cwd=simulator_path)
     for i, L in enumerate(L_list):
-        run(["./subgrad", str(args.tot), str(args.lr), str(args.par), str(args.m), str(L)], cwd=simulator_path)
+        if args.useqhd:
+            qhd_flag = 1
+        else:
+            qhd_flag = 0
+        run(["./subgrad", str(args.tot), str(args.lr), str(args.par), str(args.m), str(L), str(qhd_flag)], cwd=simulator_path)
 
         npz = np.load(os.path.join(result_path, "subgrad.npz"))
         x = np.arange(0, args.tot, 1)
@@ -81,5 +85,6 @@ if __name__ == '__main__':
     parser.add_argument("--fpath", type=str, required=True, help='path of the potential function .cpp file')
     parser.add_argument("--output", type=str, default=os.path.join(result_path, "subgrad.png"), help='path of the output .png file')
     parser.add_argument("--ngran", type=int, default=100, help='granularity of the final distribution graph (default = 100)')
+    parser.add_argument("--useqhd", action='store_true', default=False, help='use QHD output as input')
     args = parser.parse_args()
     main(args)

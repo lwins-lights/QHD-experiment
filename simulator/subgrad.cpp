@@ -121,7 +121,8 @@ double prob_at_minimum(const double *pot, const int num, const double thr,
 // L, dim, tot_steps, learning_rate, par, sample_number
 
 void subgrad(const double L, const int dim, const int tot_steps,
-             const double learning_rate, const int par, const int sample_number) {
+             const double learning_rate, const int par, const int sample_number,
+             const int use_qhd_dist) {
     /*
         Subgradient Method
         Update x by x - lr * f'(x), where f' is the subgradient and lr = learning_rate / sqrt(tot_steps)
@@ -145,10 +146,46 @@ void subgrad(const double L, const int dim, const int tot_steps,
     
     /* 
      * run subgrad with random samples in the hypercube
+     * or sample from the QHD result distribution 
      */
-    for (int id = 0; id < num; id++) {
-        for (int j = 0; j < dim; j++) {
-            x[id][j] = (uniform(gen) - 0.5) * 2 * L;
+    if (use_qhd_dist == 0) {
+        for (int id = 0; id < num; id++) {
+            for (int j = 0; j < dim; j++) {
+                x[id][j] = (uniform(gen) - 0.5) * 2 * L;
+            }
+        }
+    } else {
+        /* load from the QHD output */
+        NpyArray arr = npz_load("../result/pseudospec.npz", "len");
+        int qhd_len = (arr.data<int>())[0];
+        arr = npz_load("../result/pseudospec.npz", "dist");
+        double *dist = arr.data<double>();
+
+        /* generate (U[0,1])^n and sort */
+        double uni[num];
+        for (int i = 0; i < num; i++) {
+            uni[i] = uniform(gen);
+        }
+        sort(uni, uni + num);
+
+        /* sample from the QHD distribution*/
+        double prob_sum = 0;
+        int pivot = 0;
+        for (int i = 0; i < num; i++) {
+            //printf("i = %d\n", i);
+            while (prob_sum + dist[pivot] < uni[i]) {
+                prob_sum += dist[pivot];
+                pivot++;
+                //printf("pivot=%d\n", pivot);
+            }
+            int z[dim];
+            int_to_coord(pivot, z, dim, qhd_len);
+            //printf("Sample: ( ");
+            for (int j = 0; j < dim; j++) {
+                x[i][j] = (double(z[j]) / qhd_len - 0.5) * 2 * L;
+                //printf("%.4f ", x[i][j]);
+            }
+            //printf(")\n");
         }
     }
 
@@ -216,8 +253,8 @@ void subgrad(const double L, const int dim, const int tot_steps,
 
 int main(int argc, char **argv)
 {
-    if (argc != 6) {
-        perror("Expected arguments: ./subgrad <tot_steps> <learning_rate> <par> <sample_number> <L>");
+    if (argc != 6 && argc != 7) {
+        perror("Expected arguments: ./subgrad <tot_steps> <learning_rate> <par> <sample_number> <L> [use_qhd_dist]");
         exit(EXIT_FAILURE);
     }
     const int tot_steps = stoi(argv[1]);
@@ -225,6 +262,10 @@ int main(int argc, char **argv)
     const int par = stoi(argv[3]);
     const int sample_number = stoi(argv[4]);
     const double L = stod(argv[5]);
+    int use_qhd_dist = 0;
+    if (argc == 7) {
+        use_qhd_dist = stoi(argv[6]);
+    }
 
     int dim;
     get_potential_params(dim);
@@ -234,5 +275,5 @@ int main(int argc, char **argv)
     printf("Max threads: %d\n", omp_get_num_procs());
     printf("Threads: %d\n", omp_get_max_threads());
 
-    subgrad(L, dim, tot_steps, learning_rate, par, sample_number);
+    subgrad(L, dim, tot_steps, learning_rate, par, sample_number, use_qhd_dist);
 }
