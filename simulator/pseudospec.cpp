@@ -275,11 +275,12 @@ void pseudospec(const int dim, const int len, const double L, const double T,
     const int num_steps = T / dt;
 
     int n[dim];
-    int i, prog, prog_prev;
+    int i, prog, prog_prev, index;
     comp kop[size], u[size], psi_new[size], temp[size];
     double time_st, time_ed, t, temp_tot, thr;
     double pot[num_steps], prob_at_min[num_steps];
     double dist[size];
+    double dist_snapshot[size * n_snapshot];
     fftw_plan plan_ft, plan_ift;
 
     /* n for fftw later */
@@ -360,6 +361,13 @@ void pseudospec(const int dim, const int len, const double L, const double T,
             thr = thr_frac * expected_potential(psi, V, size, 1);
         }
         prob_at_min[step] = prob_at_minimum(psi, V, size, thr, par);
+
+        /* write into snapshot */
+        if ((step * n_snapshot) % num_steps < n_snapshot) {
+            index = (step * n_snapshot) / num_steps;
+            //printf("[DEBUG] Snapshot %d\n", index);
+            compile_distribution(psi, size, dist_snapshot + (index * size));
+        }
     }
 
     compile_distribution(psi, size, dist);
@@ -380,6 +388,7 @@ void pseudospec(const int dim, const int len, const double L, const double T,
     npz_save("../result/pseudospec.npz", "L", &L, {1}, "a");
     npz_save("../result/pseudospec.npz", "V", V, {(unsigned int) size}, "a");
     npz_save("../result/pseudospec.npz", "dist", dist, {(unsigned int) size}, "a");
+    npz_save("../result/pseudospec.npz", "dist_snapshot", dist_snapshot, {(unsigned int)(size * n_snapshot)}, "a");
 }
 
 int main(int argc, char **argv)

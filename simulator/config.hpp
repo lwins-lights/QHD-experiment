@@ -10,6 +10,9 @@ const double fd_frac = 1e-6;
 /* dictates sqrt(learning_rate) in SGD, i.e., the standard deviation of the Gaussian (Brownian) noise per time unit */
 //const double noise_level = 1;
 
+/* number of distribution snapshot output by QHD */
+const int n_snapshot = 100;
+
 /* LFMSGD hyperparameter */
 const double lfmsgd_eps = 1e-6;
 const double lfmsgd_beta = 0.9;
