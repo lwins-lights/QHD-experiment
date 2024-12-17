@@ -89,7 +89,6 @@ double compute_potential(const double *pot, const int num, const int par) {
     }
     ret = 0;
 
-    #pragma omp parallel for reduction(+: ret)
     for (int i = 0; i < num; i++) {
         ret += sorted_pot[i] * (pow((double) (num - i) / num, par) - pow((double) (num - i - 1) / num, par));
     }
@@ -130,12 +129,13 @@ void subgrad(const double L, const int dim, const int tot_steps,
 
     const int num = sample_number;
     double lr;
-    int prog, prog_prev;
+    int prog, prog_prev, index;
     int v[dim];
     double x[num][dim], x_new[num][dim], temp[dim];
     double expected_pot, time_st, time_ed, thr;
     double pot[tot_steps], prob_at_min[tot_steps];
     double cur_pot[num];
+    double dist_snapshot[n_snapshot * num * dim];
 
     /* randomness preparation */
     default_random_engine gen;
@@ -232,6 +232,16 @@ void subgrad(const double L, const int dim, const int tot_steps,
             thr = thr_frac * compute_potential(cur_pot, num, 1);
         }
         prob_at_min[step] = prob_at_minimum(cur_pot, num, thr, par);
+
+        /* write into snapshot */
+        if ((step * n_snapshot) % tot_steps < n_snapshot) {
+            index = (step * n_snapshot) / tot_steps;
+            for (int id = 0; id < num; id++) {
+                for (int i = 0; i < dim; i++) {
+                    dist_snapshot[index * num * dim + id * dim + i] = x[id][i];
+                }
+            }
+        }
     }
 
     /* timing */
@@ -249,6 +259,7 @@ void subgrad(const double L, const int dim, const int tot_steps,
     npz_save("../result/subgrad.npz", "par", &par, {1}, "a");
     npz_save("../result/subgrad.npz", "sample_number", &sample_number, {1}, "a");
     npz_save("../result/subgrad.npz", "samples", cur_pot, {(unsigned int) sample_number}, "a");
+    npz_save("../result/subgrad.npz", "dist_snapshot", dist_snapshot, {(unsigned int)(n_snapshot * num * dim)}, "a");
 }
 
 int main(int argc, char **argv)
