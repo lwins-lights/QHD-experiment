@@ -89,7 +89,6 @@ double compute_potential(const double *pot, const int num, const int par) {
     }
     ret = 0;
 
-    #pragma omp parallel for reduction(+: ret)
     for (int i = 0; i < num; i++) {
         ret += sorted_pot[i] * (pow((double) (num - i) / num, par) - pow((double) (num - i - 1) / num, par));
     }

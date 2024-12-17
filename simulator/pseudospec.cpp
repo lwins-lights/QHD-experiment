@@ -210,7 +210,6 @@ double expected_potential(const comp *psi, const double *V, const int size,
             tot_prob = tot_prob_new;
         }
     } else {
-        #pragma omp parallel for reduction(+: ret)
         for (int i = 0; i < size; i++) {
             ret += pp[i].pot * pp[i].prob;
         }
