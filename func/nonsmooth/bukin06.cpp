@@ -29,10 +29,13 @@ void get_obj_subg(const double *x, double *ret) {
     double abs2 = x1 + 10;
 
     // Calculate subgradient based on the cases
-    if (abs1 >= 0 && abs2 >= 0) {
+    if (abs1 == 0) {
+        ret[0] = 0;
+        ret[1] = 0;
+    } else if (abs1 > 0 && abs2 >= 0) {
         ret[0] = 0.01 - x1 / sqrt(x2 - 0.01*x1*x1);
         ret[1] = 50 / sqrt(x2 - 0.01*x1*x1);
-    } else if (abs1 >= 0 && abs2 < 0) {
+    } else if (abs1 > 0 && abs2 < 0) {
         ret[0] = -0.01 - x1 / sqrt(x2 - 0.01*x1*x1);
         ret[1] = 50 / sqrt(x2 - 0.01*x1*x1);
     } else if (abs1 < 0 && abs2 >= 0) {
