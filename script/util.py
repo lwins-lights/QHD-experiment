@@ -64,7 +64,7 @@ def run_subgrad(func_path, tot_steps=10000, lr_init=1, par=1, n_sample=10000, L=
     run(["make", "subgrad"], cwd=simulator_path)
 
     # run the simulator
-    arglist = ["./subgrad", str(int(tot_steps)), str(lr_init), str(int(par)), str(int(n_sample)), str(subgrad_L)]
+    arglist = ["./subgrad", str(int(tot_steps)), str(lr_init), str(int(par)), str(int(n_sample)), str(L)]
     run(arglist, cwd=simulator_path)
 
     # load the result
@@ -90,7 +90,7 @@ def run_lfmsgd(func_path, tot_steps=10000, noise_level=1, par=1, n_sample=10000,
     run(["make", "lfmsgd"], cwd=simulator_path)
 
     # run the simulator
-    arglist = ["./lfmsgd", str(int(tot_steps)), str(noise_level), str(int(par)), str(int(n_sample)), str(subgrad_L)]
+    arglist = ["./lfmsgd", str(int(tot_steps)), str(noise_level), str(int(par)), str(int(n_sample)), str(L)]
     run(arglist, cwd=simulator_path)
 
     # load the result

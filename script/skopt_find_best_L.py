@@ -60,8 +60,6 @@ def search_best_L(fpath: str, solvers: List, L_bounds: dict, suc_threshold: floa
             subgrad_result = run_subgrad(fpath, tot_steps=20000, L=L[0])
             time_vs_mean = subgrad_result["time_vs_mean"]
             _, final_mean = time_vs_mean[-1]
-            L_list.append(L[0])
-            mean_List.append(final_mean)
             return final_mean
         
         search_space = [Real(subgrad_min, subgrad_max, 'log-uniform')]
@@ -137,9 +135,6 @@ def search_best_L(fpath: str, solvers: List, L_bounds: dict, suc_threshold: floa
         data.at[row_index, 'subgrad_suc'] = results['subgrad_suc']
         data.at[row_index, 'subgrad_gap'] = results['subgrad_gap']
         print(f"subgrad_best_L: {results['subgrad_best_L']}, subgrad_gap: {results['subgrad_gap']}, subgrad_suc: {results['subgrad_suc']}")
-        print(f"L_tested: {L_list}")
-        print("---------------------------------------------------------------")
-        print(f"mean_returned: {mean_List}")
         
     if 3 in solvers:
         data.at[row_index, 'lfmsgd_L'] = results["lfmsgd_best_L"]
@@ -158,11 +153,11 @@ def search_best_L(fpath: str, solvers: List, L_bounds: dict, suc_threshold: floa
 
 if __name__ == '__main__':
     fpath = 'func/nonsmooth/WF.cpp'
-    solvers = [2]                                # 1: qhd, 2: subgrad, 3: lfmsgd, 4: pure qhd (no subgrad involved)
+    solvers = [4]                                # 1: qhd, 2: subgrad, 3: lfmsgd, 4: pure qhd (no subgrad involved)
     qhd_best_subgrad_L = 12.2602                    # if qhd is included, the best L for subgrad 
     suc_threshold = 0.05
     qhd_L_bounds = 0.1, 100
     subgrad_L_bounds = 0.1, 100
-    lfmsgd_L_bounds = 0.001, 10
+    lfmsgd_L_bounds = 0.1, 100
     L_bounds = {"qhd_L_bounds": qhd_L_bounds, "subgrad_L_bounds": subgrad_L_bounds, "lfmsgd_L_bounds": lfmsgd_L_bounds}
     results = search_best_L(fpath, solvers, L_bounds, suc_threshold, qhd_best_subgrad_L=qhd_best_subgrad_L)
