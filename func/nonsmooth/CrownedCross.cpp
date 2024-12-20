@@ -18,7 +18,7 @@ double get_obj(const double *x) {
     double x1 = x[0];
     double x2 = x[1];
     
-    return 0.0001*pow((fabs(sin(x1)*sin(x2)*exp(100 - sqrt(pow(x1, 2) + pow(x2, 2)) / M_PI)) + 1), (0.1)) - 0.0001;
+    return 0.0001*pow((fabs(sin(x1)*sin(x2)*exp(100 - sqrt(pow(x1, 2) + pow(x2, 2)) / M_PI)) + 1), (0.1)) - 0.001873;
 }
 
 void get_obj_subg(const double *x, double *ret) {
