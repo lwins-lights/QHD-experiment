@@ -8,6 +8,7 @@ from colorama import Fore, Back, Style, init
 import os
 from re import sub
 import pandas as pd
+import math
 np.random.seed(0)
 
 # path init
@@ -15,6 +16,14 @@ this_path = os.path.dirname(os.path.realpath(__file__))
 root_path = os.path.join(this_path, '..')
 result_path = os.path.join(root_path, "result")
 data_file_path = os.path.join(result_path, "best_L_skopt_0.05.csv")
+
+def lower_precision(value, relative_precision=1e-6):
+    if value == 0:
+        return 0
+    # Determine the order of magnitude
+    magnitude = 10 ** math.floor(math.log10(abs(value)))
+    # Round to the desired relative precision
+    return round(value / magnitude / relative_precision) * magnitude * relative_precision
 
 def search_best_L(fpath: str, solvers: List, L_bounds: dict, suc_threshold: float, qhd_best_subgrad_L: None, n_calls: int = 50):
     init()
@@ -33,7 +42,7 @@ def search_best_L(fpath: str, solvers: List, L_bounds: dict, suc_threshold: floa
                 qhd_result = run_qhd_subgrad(fpath, qhd_L=L[0], subgrad_L=qhd_best_subgrad_L)
                 time_vs_mean = qhd_result["time_vs_mean"]
                 _, final_mean = time_vs_mean[-1]
-                return final_mean
+                return lower_precision(final_mean)
             
             search_space = [Real(qhd_min, qhd_max, 'log-uniform')]
             optimize_result = gp_minimize(f, search_space, n_calls=n_calls, random_state=0)
@@ -98,7 +107,7 @@ def search_best_L(fpath: str, solvers: List, L_bounds: dict, suc_threshold: floa
             qhd_result = run_qhd(fpath, T=20, L=L[0])
             time_vs_mean = qhd_result["time_vs_mean"]
             _, final_mean = time_vs_mean[-1]
-            return final_mean
+            return lower_precision(final_mean)
         
         search_space = [Real(qhd_min, qhd_max, 'log-uniform')]
         optimize_result = gp_minimize(f, search_space, n_calls=n_calls, random_state=0)

@@ -90,6 +90,21 @@ void scalar_mul(double *a, const double k,  const int size) {
     }
 }
 
+void vec_confine(double *a, const double L, const int size) {
+    /*
+        confine each component of a in [-L, L]
+    */
+
+    for (int i = 0; i < size; i++) {
+        if (a[i] < -L) {
+            a[i] = -L;
+        }
+        if (a[i] > L) {
+            a[i] = L;
+        }
+    }
+}
+
 void int_to_coord(const int l, int *x, const int dim, const int len) {
     /*
         inverse of coord_to_int()
@@ -164,6 +179,7 @@ void lfmsgd(const double L, const int dim, const int tot_steps,
     double expected_pot, time_st, time_ed, thr, eta, temp_val;
     double pot[tot_steps], prob_at_min[tot_steps];
     double cur_pot[num];
+    double gaussian_pool[n_pool];
 
     /* randomness preparation */
     default_random_engine gen;
@@ -171,6 +187,10 @@ void lfmsgd(const double L, const int dim, const int tot_steps,
     uniform_real_distribution<double> uniform(0, 1);
 
     gen.seed(0);
+
+    for (int i = 0; i < n_pool; i++) {
+        gaussian_pool[i] = gaussian(gen);
+    }
     
     /* 
      * run lfmsgd with random samples in the hypercube
@@ -213,7 +233,7 @@ void lfmsgd(const double L, const int dim, const int tot_steps,
 
             /* add noise */
             for (int i = 0; i < dim; i++) {
-                temp[i] += gaussian(gen);
+                temp[i] += gaussian_pool[(unsigned int)(step * num * dim + id * dim + i) % n_pool];
             }
 
             /* update momentum: m_ = beta * m + (1 - beta) * f'(x) */
@@ -226,6 +246,7 @@ void lfmsgd(const double L, const int dim, const int tot_steps,
             memcpy(temp, m_new[id], sizeof(temp));
             scalar_mul(temp, eta, dim);
             vec_minus(x[id], temp, x_new[id], dim);
+            vec_confine(x_new[id], L, dim);
 
             /* let x := x_ for the next rotation */
             //vec_copy(x_new[id], x[id], dim, L);
