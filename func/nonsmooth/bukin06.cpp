@@ -8,7 +8,7 @@ const int dim = 2;
 /* parameters for encapsulation */
 const double lb[] = {-15, -3};   // lower bound of the actual function range for each dimension
 const double ub[] = {-5, 3};     // upper bound
-const double compress_coef = 1;  // the actual function will be compressed into a hypercube "bound": (compress_coef * [-L,L])^dim
+const double compress_coef = 0.95;  // the actual function will be compressed into a hypercube "bound": (compress_coef * [-L,L])^dim
 const double slope = 100;             // specifies how fast the encapsulated function will grow out of the "bound"
 const double pinned[] = {-10, 1}; // the pinned point will be guaranteed to be picked by the QHD discretization
 

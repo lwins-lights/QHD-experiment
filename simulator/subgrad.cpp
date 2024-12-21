@@ -58,6 +58,21 @@ void scalar_mul(double *a, const double k,  const int size) {
     }
 }
 
+void vec_confine(double *a, const double L, const int size) {
+    /*
+        confine each component of a in [-L, L]
+    */
+
+    for (int i = 0; i < size; i++) {
+        if (a[i] < -L) {
+            a[i] = -L;
+        }
+        if (a[i] > L) {
+            a[i] = L;
+        }
+    }
+}
+
 void int_to_coord(const int l, int *x, const int dim, const int len) {
     /*
         inverse of coord_to_int()
@@ -208,6 +223,7 @@ void subgrad(const double L, const int dim, const int tot_steps,
             /* x' = x - lr * temp */
             scalar_mul(temp, lr, dim);
             vec_minus(x[id], temp, x_new[id], dim);
+            vec_confine(x_new[id], L, dim);
 
             double newval = get_potential(x_new[id], L);
             // if (id == 999 && newval > 3500 && cur_pot[id] < 3500) {

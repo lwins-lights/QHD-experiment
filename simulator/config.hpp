@@ -16,6 +16,10 @@ const int n_snapshot = 100;
 /* LFMSGD hyperparameter */
 const double lfmsgd_eps = 1e-6;
 const double lfmsgd_beta = 0.9;
+
+/* LFMSGD length of the random Gaussian pool */
+const int n_pool = 10000019;
+
 /*************************/
 
 const int mu_size = 10000000;

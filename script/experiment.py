@@ -1,4 +1,4 @@
-from util import run_qhd, run_qhd_subgrad
+from util import *
 from skopt import gp_minimize
 from skopt.space import Real
 import numpy as np
@@ -83,5 +83,18 @@ def test_keane_and_kde():
     plt.grid(True, linestyle="--", alpha=0.7)
     plt.show()
 
+def test_lfmsgd_rand():
+    result = run_lfmsgd('func/nonsmooth/WF.cpp', L=6, n_sample=2, tot_steps=2)
+    time_vs_mean = result['time_vs_mean']
+    time, mean = time_vs_mean[-1]
+    print(f'mean = {mean}')
+
+def test():
+    result = run_qhd_subgrad('func/nonsmooth/WF.cpp', qhd_L=5.8089, subgrad_L=420)
+    time_vs_mean = result['time_vs_mean']
+    time, mean = time_vs_mean[-1]
+    suc = round(sum(item["prob"] for item in result['output'] if item["value"] < 0.05), 4)
+    print(f'mean = {mean}, suc = {suc}')
+
 if __name__ == '__main__':
-    test_keane_gp()
+    test()

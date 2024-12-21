@@ -21,3 +21,6 @@ simulator/potential.cpp
 
 *.o
 *.gch
+
+# Ignore __pycache__ folders
+__pycache__/
