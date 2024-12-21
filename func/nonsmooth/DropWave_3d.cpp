@@ -28,12 +28,17 @@ void get_obj_subg(const double *x, double *ret) {
     double x3 = x[2];
 
     double SumOfPower = pow(x1, 2) + pow(x2, 2) + pow(x3, 2);
-    
-    ret[0] = 12*x1*sin(12*sqrt(SumOfPower)) / (sqrt(SumOfPower) * (0.5*SumOfPower + 2)) 
-            + x1*(cos(12*sqrt(SumOfPower)) + 1.00) / pow((0.5*SumOfPower + 2), 2);
-    ret[1] = 12*x2*sin(12*sqrt(SumOfPower)) / (sqrt(SumOfPower) * (0.5*SumOfPower + 2)) 
-            + x2*(cos(12*sqrt(SumOfPower)) + 1.00) / pow((0.5*SumOfPower + 2), 2);;
-    ret[2] = 12*x3*sin(12*sqrt(SumOfPower)) / (sqrt(SumOfPower) * (0.5*SumOfPower + 2)) 
-            + x3*(cos(12*sqrt(SumOfPower)) + 1.00) / pow((0.5*SumOfPower + 2), 2);;
 
+    if ((0.5*SumOfPower + 2) == 0 || sqrt(SumOfPower) * (0.5*SumOfPower + 2) == 0) {
+        ret[0] = 0.00;
+        ret[1] = 0.00;
+        ret[2] = 0.00;
+    } else {
+        ret[0] = 12*x1*sin(12*sqrt(SumOfPower)) / (sqrt(SumOfPower) * (0.5*SumOfPower + 2)) 
+            + x1*(cos(12*sqrt(SumOfPower)) + 1.00) / pow((0.5*SumOfPower + 2), 2);
+        ret[1] = 12*x2*sin(12*sqrt(SumOfPower)) / (sqrt(SumOfPower) * (0.5*SumOfPower + 2)) 
+                + x2*(cos(12*sqrt(SumOfPower)) + 1.00) / pow((0.5*SumOfPower + 2), 2);
+        ret[2] = 12*x3*sin(12*sqrt(SumOfPower)) / (sqrt(SumOfPower) * (0.5*SumOfPower + 2)) 
+                + x3*(cos(12*sqrt(SumOfPower)) + 1.00) / pow((0.5*SumOfPower + 2), 2);
+    }
 }

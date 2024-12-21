@@ -28,22 +28,25 @@ void get_obj_subg(const double *x, double *ret) {
 
     double abs1 = x1*x2;
     double abs2 = x2*x3;
-    
+
+    bool zero1 = x1*x2 + 0.001 == 0;
+    bool zero2 = x2*x3 + 0.001 == 0;
+
     if (abs1 >= 0 && abs2 >= 0) {
-        ret[0] = x2 / (x1*x2 + 0.001) - sin(x1 + x2);
-        ret[1] = x1 / (x1*x2 + 0.001) - sin(x1 + x2) + x3 / (x2*x3 + 0.001) - sin(x2 + x3);
-        ret[2] = x2 / (x2*x3 + 0.001) - sin(x2 + x3);
+        ret[0] = zero1 ? 0 : x2 / (x1*x2 + 0.001) - sin(x1 + x2);
+        ret[1] = (zero1 || zero2) ? 0 : x1 / (x1*x2 + 0.001) - sin(x1 + x2) + x3 / (x2*x3 + 0.001) - sin(x2 + x3);
+        ret[2] = zero2 ? 0 : x2 / (x2*x3 + 0.001) - sin(x2 + x3);
     } else if (abs1 >= 0 && abs2 < 0) {
-        ret[0] = x2 / (x1*x2 + 0.001) - sin(x1 + x2);
-        ret[1] = x1 / (x1*x2 + 0.001) - sin(x1 + x2) - x3 / (-x2*x3 + 0.001) - sin(x2 + x3);
-        ret[2] = -x2 / (-x2*x3 + 0.001) - sin(x2 + x3);
+        ret[0] = zero1 ? 0 : x2 / (x1*x2 + 0.001) - sin(x1 + x2);
+        ret[1] = (zero1 || zero2) ? 0 : x1 / (x1*x2 + 0.001) - sin(x1 + x2) - x3 / (-x2*x3 + 0.001) - sin(x2 + x3);
+        ret[2] = zero2 ? 0 : -x2 / (-x2*x3 + 0.001) - sin(x2 + x3);
     } else if (abs1 < 0 && abs2 >= 0) {
-        ret[0] = -x2 / (-x1*x2 + 0.001) - sin(x1 + x2);
-        ret[1] = -x1 / (-x1*x2 + 0.001) - sin(x1 + x2) + x3 / (x2*x3 + 0.001) - sin(x2 + x3);
-        ret[2] = x2 / (x2*x3 + 0.001) - sin(x2 + x3);
+        ret[0] = zero1 ? 0 : -x2 / (-x1*x2 + 0.001) - sin(x1 + x2);
+        ret[1] = (zero1 || zero2) ? 0 : -x1 / (-x1*x2 + 0.001) - sin(x1 + x2) + x3 / (x2*x3 + 0.001) - sin(x2 + x3);
+        ret[2] = zero2 ? 0 : x2 / (x2*x3 + 0.001) - sin(x2 + x3);
     } else {
-        ret[0] = -x2 / (-x1*x2 + 0.001) - sin(x1 + x2);
-        ret[1] = -x1 / (-x1*x2 + 0.001) - sin(x1 + x2) - x3 / (-x2*x3 + 0.001) - sin(x2 + x3);
-        ret[2] = -x2 / (-x2*x3 + 0.001) - sin(x2 + x3);
+        ret[0] = zero1 ? 0 : -x2 / (-x1*x2 + 0.001) - sin(x1 + x2);
+        ret[1] = (zero1 || zero2) ? 0 : -x1 / (-x1*x2 + 0.001) - sin(x1 + x2) - x3 / (-x2*x3 + 0.001) - sin(x2 + x3);
+        ret[2] = zero2 ? 0 : -x2 / (-x2*x3 + 0.001) - sin(x2 + x3);
     }
 }

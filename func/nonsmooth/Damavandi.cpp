@@ -38,21 +38,30 @@ void get_obj_subg(const double *x, double *ret) {
     double abs1 = (sin(pi*(x1 - 2)))*(sin(pi*(x2 - 2)))/(pi*pi*(x1 -2)*(x2 - 2));
 
     // Calculate subgradient based on the cases
+    bool zero1 = (pow(pi, 10)*pow(x1 - 2, 5)*pow(x2 - 2, 5)) == 0;
+    bool zero2 = (pow(pi, 10)*pow(x1 - 2, 6)*pow(x2 - 2, 5)) == 0;
+    bool zero3 = (pow(pi, 9)*pow(x1 - 2, 5)*pow(x2 - 2, 5)) == 0;
+    bool zero4 = (pow(pi, 10)*pow(x1 - 2, 5)*pow(x2 - 2, 6)) == 0;
+
     if (abs1 >= 0) {
-        ret[0] = 2*(x1-7)*(1-pow(sin(pi*(x1-2)), 5)*pow(sin(pi*(x2-2)), 5) / (pow(pi, 10)*pow(x1 - 2, 5)*pow(x2 - 2, 5))) + 
+        ret[0] = (zero1 || zero2 || zero3) ? 0 :
+                 2*(x1-7)*(1-pow(sin(pi*(x1-2)), 5)*pow(sin(pi*(x2-2)), 5) / (pow(pi, 10)*pow(x1 - 2, 5)*pow(x2 - 2, 5))) + 
                  (pow(x1-7, 2) + 2*pow(x2 - 7, 2) + 2) * 
                  (5*pow(sin(pi*(x1-2)), 5)*pow(sin(pi*(x2-2)), 5) / (pow(pi, 10)*pow(x1 - 2, 6)*pow(x2 - 2, 5)) - 
                   5*pow(sin(pi*(x1-2)), 4)*cos(pi*(x1 - 2))*pow(sin(pi*(x2-2)), 5) / (pow(pi, 9)*pow(x1 - 2, 5)*pow(x2 - 2, 5)));
-        ret[1] = 4*(x2-7)*(1-pow(sin(pi*(x1-2)), 5)*pow(sin(pi*(x2-2)), 5) / (pow(pi, 10)*pow(x1 - 2, 5)*pow(x2 - 2, 5))) + 
+        ret[1] = (zero1 || zero3 || zero4) ? 0 :
+                 4*(x2-7)*(1-pow(sin(pi*(x1-2)), 5)*pow(sin(pi*(x2-2)), 5) / (pow(pi, 10)*pow(x1 - 2, 5)*pow(x2 - 2, 5))) + 
                  (pow(x1-7, 2) + 2*pow(x2 - 7, 2) + 2) * 
                  (5*pow(sin(pi*(x1-2)), 5)*pow(sin(pi*(x2-2)), 5) / (pow(pi, 10)*pow(x1 - 2, 5)*pow(x2 - 2, 6)) - 
                   5*pow(sin(pi*(x1-2)), 5)*cos(pi*(x2 - 2))*pow(sin(pi*(x2-2)), 4) / (pow(pi, 9)*pow(x1 - 2, 5)*pow(x2 - 2, 5)));
     } else {
-        ret[0] = 2*(x1-7)*(1+pow(sin(pi*(x1-2)), 5)*pow(sin(pi*(x2-2)), 5) / (pow(pi, 10)*pow(x1 - 2, 5)*pow(x2 - 2, 5))) + 
+        ret[0] = (zero1 || zero2 || zero3) ? 0 :
+                 2*(x1-7)*(1+pow(sin(pi*(x1-2)), 5)*pow(sin(pi*(x2-2)), 5) / (pow(pi, 10)*pow(x1 - 2, 5)*pow(x2 - 2, 5))) + 
                  (pow(x1-7, 2) + 2*pow(x2 - 7, 2) + 2) * 
                  (-5*pow(sin(pi*(x1-2)), 5)*pow(sin(pi*(x2-2)), 5) / (pow(pi, 10)*pow(x1 - 2, 6)*pow(x2 - 2, 5)) + 
                   5*pow(sin(pi*(x1-2)), 4)*cos(pi*(x1 - 2))*pow(sin(pi*(x2-2)), 5) / (pow(pi, 9)*pow(x1 - 2, 5)*pow(x2 - 2, 5)));
-        ret[1] = 4*(x2-7)*(1+pow(sin(pi*(x1-2)), 5)*pow(sin(pi*(x2-2)), 5) / (pow(pi, 10)*pow(x1 - 2, 5)*pow(x2 - 2, 5))) + 
+        ret[1] = (zero1 || zero3 || zero4) ? 0 :
+                 4*(x2-7)*(1+pow(sin(pi*(x1-2)), 5)*pow(sin(pi*(x2-2)), 5) / (pow(pi, 10)*pow(x1 - 2, 5)*pow(x2 - 2, 5))) + 
                  (pow(x1-7, 2) + 2*pow(x2 - 7, 2) + 2) * 
                  (-5*pow(sin(pi*(x1-2)), 5)*pow(sin(pi*(x2-2)), 5) / (pow(pi, 10)*pow(x1 - 2, 5)*pow(x2 - 2, 6)) + 
                   5*pow(sin(pi*(x1-2)), 5)*cos(pi*(x2 - 2))*pow(sin(pi*(x2-2)), 4) / (pow(pi, 9)*pow(x1 - 2, 5)*pow(x2 - 2, 5)));

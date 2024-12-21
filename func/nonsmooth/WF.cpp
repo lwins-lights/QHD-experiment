@@ -10,8 +10,8 @@ const int dim = 2;
 const double lb[] = {-10, -10};   // lower bound of the actual function range for each dimension
 const double ub[] = {10, 10};     // upper bound
 const double compress_coef = 0.95;  // the actual function will be compressed into a hypercube "bound": (compress_coef * [-L,L])^dim
-const double slope = 10;             // specifies how fast the encapsulated function will grow out of the "bound"
-const double pinned[] = {0, 0};     // *** ERRORNEOUS: THIS NEEDS TO BE FIXED LATER ***
+const double slope = 100;             // specifies how fast the encapsulated function will grow out of the "bound"
+const double pinned[] = {0, 0};     
 
 double get_obj(const double *x) {
     
@@ -37,15 +37,15 @@ void get_obj_subg(const double *x, double *ret) {
 
     if (term1 >= term2 && term1 >= term3) {
         // gradient for term1
-        ret[0] = (0.5*x1*x1 +  0.1*x1 + 0.505) / pow(x1 + 0.1, 2);
+        ret[0] = (x1 != -0.1) ? (0.5*x1*x1 +  0.1*x1 + 0.505) / pow(x1 + 0.1, 2) : 0.0;
         ret[1] = 2*x2;
     } else if (term2 >= term1 && term2 >= term3) {
         // gradient for term2
-        ret[0] = (-0.5*x1*x1 -  0.1*x1 + 0.495) / pow(x1 + 0.1, 2);
+        ret[0] = (x1 != -0.1) ? (-0.5*x1*x1 -  0.1*x1 + 0.495) / pow(x1 + 0.1, 2) : 0.0;
         ret[1] = 2*x2;
     } else {
         // gradient for term3
-        ret[0] = (0.5*x1*x1 +  0.1*x1 - 0.495) / pow(x1 + 0.1, 2);
+        ret[0] = (x1 != -0.1) ? (0.5*x1*x1 +  0.1*x1 - 0.495) / pow(x1 + 0.1, 2) : 0.0;
         ret[1] = -2*x2;
     }
 }

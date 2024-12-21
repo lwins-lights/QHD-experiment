@@ -28,7 +28,10 @@ void get_obj_subg(const double *x, double *ret) {
     double abs1 = x2 + x1 + 1;
     double abs2 = x2 - x1 + 1;
 
-    if (abs1 >= 0 && abs2 >= 0) {
+    if (abs1 == 0 || abs2 == 0) {
+        ret[0] = 0;
+        ret[1] = 0;
+    } else if (abs1 > 0 && abs2 > 0) {
         ret[0] = (x2+1)*sin(sqrt(abs2))*sin(sqrt(abs1)) / (2*sqrt(abs2)) - 
                 (x1*sin(sqrt(abs2))*sin(sqrt(abs1))) / (2*sqrt(abs1)) - 
                 (x1*cos(sqrt(abs2))*cos(sqrt(abs1))) / (2*sqrt(abs2)) + 
@@ -39,7 +42,7 @@ void get_obj_subg(const double *x, double *ret) {
                 (x1*cos(sqrt(abs2))*cos(sqrt(abs1))) / (2*sqrt(abs2)) + 
                 (x2+1)*cos(sqrt(abs2))*cos(sqrt(abs1)) / (2*sqrt(abs1)) + 
                 sin(sqrt(abs1))*cos(sqrt(abs2));
-    } else if (abs1 >= 0 && abs2 < 0) {
+    } else if (abs1 > 0 && abs2 < 0) {
         ret[0] = -(x2+1)*sin(sqrt(-abs2))*sin(sqrt(abs1)) / (2*sqrt(-abs2)) - 
                 (x1*sin(sqrt(-abs2))*sin(sqrt(abs1))) / (2*sqrt(abs1)) +
                 (x1*cos(sqrt(-abs2))*cos(sqrt(abs1))) / (2*sqrt(-abs2)) + 
@@ -50,7 +53,7 @@ void get_obj_subg(const double *x, double *ret) {
                 (x1*cos(sqrt(-abs2))*cos(sqrt(abs1))) / (2*sqrt(-abs2)) + 
                 (x2+1)*cos(sqrt(-abs2))*cos(sqrt(abs1)) / (2*sqrt(abs1)) + 
                 sin(sqrt(abs1))*cos(sqrt(-abs2));
-    } else if (abs1 < 0 && abs2 >= 0) {
+    } else if (abs1 < 0 && abs2 > 0) {
         ret[0] = (x2+1)*sin(sqrt(abs2))*sin(sqrt(-abs1)) / (2*sqrt(abs2)) + 
                 (x1*sin(sqrt(abs2))*sin(sqrt(-abs1))) / (2*sqrt(-abs1)) - 
                 (x1*cos(sqrt(abs2))*cos(sqrt(-abs1))) / (2*sqrt(abs2)) - 
