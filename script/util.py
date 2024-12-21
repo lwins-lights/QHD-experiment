@@ -111,11 +111,13 @@ def run_lfmsgd(func_path, tot_steps=10000, noise_level=1, par=1, n_sample=10000,
 def run_qhd_subgrad(
     func_path, 
     resol=256, T=10, dt=0.001, par=1, qhd_L=1, 
-    tot_steps=10000, lr_init=1, n_sample=10000, subgrad_L=1
+    tot_steps=10000, lr_init=1, n_sample=10000, subgrad_L=1,
+    skip_qhd=False
 ):
 
     # run QHD first
-    run_qhd(func_path, resol=resol, T=T, dt=dt, par=par, L=qhd_L)
+    if not skip_qhd:
+        run_qhd(func_path, resol=resol, T=T, dt=dt, par=par, L=qhd_L)
 
     # compile SUBGRAD
     run(["make", "subgrad"], cwd=simulator_path)
