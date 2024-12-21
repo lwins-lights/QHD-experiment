@@ -179,7 +179,7 @@ void lfmsgd(const double L, const int dim, const int tot_steps,
     double expected_pot, time_st, time_ed, thr, eta, temp_val;
     double pot[tot_steps], prob_at_min[tot_steps];
     double cur_pot[num];
-    double gaussian_pool[n_pool];
+    static double gaussian_pool[n_pool];
 
     /* randomness preparation */
     default_random_engine gen;
