@@ -49,14 +49,15 @@ def search_best_L(fpath: str, solvers: List, L_bounds: dict, suc_threshold: floa
         search_space = [Real(qhd_min, qhd_max, 'log-uniform')]
         optimize_result = gp_minimize(f, search_space, n_calls=n_calls, random_state=0)
         best_L = optimize_result.x[0]
-        results["qhd_L"] = round(best_L, 4)
+        results["qhd_L"] = best_L #round(best_L, 4)
 
         # run qhd again with this best L
 
         result = run_qhd(fpath, L=best_L)
         _, final_mean = result["time_vs_mean"][-1]
-        results["pure_qhd_gap"] = round(final_mean, 4)
-        results["pure_qhd_suc"] = round(sum(item["prob"] for item in result['output'] if item["value"] < suc_threshold), 4)
+        _, init_mean = result["time_vs_mean"][0]
+        results["pure_qhd_gap"] = final_mean #round(final_mean, 4)
+        results["pure_qhd_suc"] = sum(item["prob"] for item in result['output'] if item["value"] < suc_threshold * init_mean) #round(sum(item["prob"] for item in result['output'] if item["value"] < suc_threshold * init_mean), 4)
 
         # optimize minisubgrad_L next
 
@@ -70,14 +71,14 @@ def search_best_L(fpath: str, solvers: List, L_bounds: dict, suc_threshold: floa
         search_space = [Real(minisubgrad_min, minisubgrad_max, 'log-uniform')]
         optimize_result = gp_minimize(g, search_space, n_calls=n_calls, random_state=0)
         mini_best_L = optimize_result.x[0]
-        results["minisubgrad_L"] = round(mini_best_L, 4)
+        results["minisubgrad_L"] = mini_best_L #round(mini_best_L, 4)
 
         # run again
 
         result = run_qhd_subgrad(fpath, qhd_L=best_L, subgrad_L=mini_best_L)
         _, final_mean = result["time_vs_mean"][-1]
-        results["qhd_gap"] = round(final_mean, 4)
-        results["qhd_suc"] = round(sum(item["prob"] for item in result['output'] if item["value"] < suc_threshold), 4)
+        results["qhd_gap"] = final_mean #round(final_mean, 4)
+        results["qhd_suc"] = sum(item["prob"] for item in result['output'] if item["value"] < suc_threshold * init_mean) #round(sum(item["prob"] for item in result['output'] if item["value"] < suc_threshold * init_mean), 4)
     
     if 2 in solvers:  # if subgrad is included
         subgrad_min, subgrad_max = L_bounds["subgrad_L_bounds"]
@@ -90,13 +91,14 @@ def search_best_L(fpath: str, solvers: List, L_bounds: dict, suc_threshold: floa
         search_space = [Real(subgrad_min, subgrad_max, 'log-uniform')]
         optimize_result = gp_minimize(f, search_space, n_calls=n_calls, random_state=0)
         best_L = optimize_result.x[0]
-        results["subgrad_L"] = round(best_L, 4)
+        results["subgrad_L"] = best_L #round(best_L, 4)
         
         # run subgrad again with this best L
         subgrad_result = run_subgrad(fpath, tot_steps=20000, L=best_L)
         _, final_mean = subgrad_result["time_vs_mean"][-1]
-        results["subgrad_gap"] = round(final_mean, 4)
-        results["subgrad_suc"] = round(sum(item["prob"] for item in subgrad_result['output'] if item["value"] < suc_threshold), 4)
+        _, init_mean = result["time_vs_mean"][0]
+        results["subgrad_gap"] = final_mean #round(final_mean, 4)
+        results["subgrad_suc"] = sum(item["prob"] for item in subgrad_result['output'] if item["value"] < suc_threshold * init_mean) #round(sum(item["prob"] for item in subgrad_result['output'] if item["value"] < suc_threshold * init_mean), 4)
     
     if 3 in solvers:  # if lfmsgd is included
         lfmsgd_min, lfmsgd_max = L_bounds["lfmsgd_L_bounds"]
@@ -109,13 +111,14 @@ def search_best_L(fpath: str, solvers: List, L_bounds: dict, suc_threshold: floa
         search_space = [Real(lfmsgd_min, lfmsgd_max, 'log-uniform')]
         optimize_result = gp_minimize(f, search_space, n_calls=n_calls, random_state=0)
         best_L = optimize_result.x[0]
-        results["lfmsgd_L"] = round(best_L, 4)
+        results["lfmsgd_L"] = best_L #round(best_L, 4)
         
         # run lfmsgd again with this best L
         lfmsgd_result = run_lfmsgd(fpath, tot_steps=20000, L=best_L)
         _, final_mean = lfmsgd_result["time_vs_mean"][-1]
-        results["lfmsgd_gap"] = round(final_mean, 4)
-        results["lfmsgd_suc"] = round(sum(item["prob"] for item in lfmsgd_result['output'] if item["value"] < suc_threshold), 4)
+        _, init_mean = result["time_vs_mean"][0]
+        results["lfmsgd_gap"] = final_mean #round(final_mean, 4)
+        results["lfmsgd_suc"] = sum(item["prob"] for item in lfmsgd_result['output'] if item["value"] < suc_threshold * init_mean) #round(sum(item["prob"] for item in lfmsgd_result['output'] if item["value"] < suc_threshold * init_mean), 4)
 
     '''
     if 4 in solvers:  # if pure qhd (no subgrad involved) is included
@@ -180,7 +183,7 @@ def search_best_L(fpath: str, solvers: List, L_bounds: dict, suc_threshold: floa
 if __name__ == '__main__':
     fpath = 'func/nonsmooth/keane.cpp'
     solvers = [1, 2, 3]                                # 1: qhd, 2: subgrad, 3: lfmsgd, 4: pure qhd (no subgrad involved)
-    suc_threshold = 0.05
+    suc_threshold = 0.01
     qhd_L_bounds = 0.1, 100
     subgrad_L_bounds = 0.1, 100
     minisubgrad_L_bounds = 0.1, 10000

@@ -3,6 +3,7 @@ from skopt import gp_minimize
 from skopt.space import Real
 import numpy as np
 from colorama import Fore, Back, Style, init
+import matplotlib.pyplot as plt
 
 def test_keane_ternary():
     def ternary_search_min(f, a, b, epsilon=1e-3):
@@ -96,5 +97,53 @@ def test():
     suc = round(sum(item["prob"] for item in result['output'] if item["value"] < 0.05), 4)
     print(f'mean = {mean}, suc = {suc}')
 
+def test2():
+    fpath = 'func/nonsmooth/keane.cpp'
+    result1 = run_qhd(fpath, dt=0.001)
+    result2 = run_subgrad(fpath, tot_steps=100)
+    result3 = run_lfmsgd(fpath, tot_steps=100)
+    _, mean1 = result1['time_vs_mean'][0]
+    _, mean2 = result2['time_vs_mean'][0]
+    _, mean3 = result3['time_vs_mean'][0]
+    print(f'MEAN: {mean1}; {mean2}; {mean3}')
+
+def test_print_dist():
+    fpath = 'func/nonsmooth/keane.cpp'
+    #result = run_lfmsgd(fpath, L=2.1228682698967813, tot_steps=20000, n_sample=1000)
+    result = run_qhd_subgrad(fpath, qhd_L=0.267101753506348, subgrad_L=6.05144432518986)
+    #result = run_subgrad(fpath, L=4.81342991759568, tot_steps=20000, n_sample=1000)
+    x = [item["value"] for item in result['output']]
+    plt.figure(figsize=(8, 5))
+    plt.plot(x, marker='o', linestyle='-', label='Linear Scale')
+    plt.yscale('log')  # Set Y-axis to logarithmic scale
+    plt.xlabel('Index')
+    plt.ylabel('Value (log scale)')
+    plt.title('1D Float Array with Logarithmic Scale')
+    plt.grid(True, which="both", linestyle="--", linewidth=0.5)
+    plt.legend()
+    plt.show()
+
+def test3():
+    fpath = 'func/nonsmooth/WF.cpp'
+    result1 = run_qhd(fpath, resol=64, L=1.7210213630447821)
+    result2 = run_qhd_subgrad(fpath, skip_qhd=True, subgrad_L=1787.2900596444126)
+    _, mean1 = result1['time_vs_mean'][-1]
+    _, mean2 = result2['time_vs_mean'][-1]
+    print(f'MEAN: {mean1}; {mean2}')
+
+def find_min():
+    fpath = 'func/nonsmooth/keane.cpp'
+    def f(vars):
+        L = vars[0]
+        result = run_subgrad(fpath, L=L, tot_steps=1000, n_sample=100000)
+        output = result['output']
+        mini = (min(output, key=lambda x: x["value"]))["value"]
+        print(f"L: {L}; MIN: {mini}")
+        return mini
+    search_space=[Real(1, 1e6, 'log-uniform')]
+    optimize_result = gp_minimize(f, search_space, n_calls=50, random_state=0)
+    print(f"Final L: {optimize_result.x[0]}; MIN: {optimize_result.fun}")
+
 if __name__ == '__main__':
-    test()
+    #test2()
+    find_min()

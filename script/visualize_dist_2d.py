@@ -29,10 +29,22 @@ def show_side_by_side():
     x_sgd, y_sgd = np.meshgrid(x_sgd, y_sgd)
     positions_sgd = np.vstack([x_sgd.ravel(), y_sgd.ravel()])
 
+    # Data preparation for `show_lfmsgd`
+    lfmsgd_res = np.load('./result/lfmsgd.npz')
+    L_lfmsgd = lfmsgd_res['L']
+    sample_number_lfmsgd = lfmsgd_res['sample_number'][0]
+    k_total_lfmsgd = 100
+    dist_lfmsgd = lfmsgd_res['dist_snapshot'].reshape(k_total_lfmsgd, sample_number_lfmsgd, 2)
+    x_lfmsgd = np.linspace(-L_lfmsgd, L_lfmsgd, grid_size)
+    y_lfmsgd = np.linspace(-L_lfmsgd, L_lfmsgd, grid_size)
+    x_lfmsgd, y_lfmsgd = np.meshgrid(x_lfmsgd, y_lfmsgd)
+    positions_lfmsgd = np.vstack([x_lfmsgd.ravel(), y_lfmsgd.ravel()])
+
     # Set up the figure and subplots
-    fig = plt.figure(figsize=(12, 6))
-    ax_qhd = fig.add_subplot(121, projection='3d')
-    ax_sgd = fig.add_subplot(122, projection='3d')
+    fig = plt.figure(figsize=(18, 6))
+    ax_qhd = fig.add_subplot(131, projection='3d')
+    ax_sgd = fig.add_subplot(132, projection='3d')
+    ax_lfmsgd = fig.add_subplot(133, projection='3d')
     plt.subplots_adjust(bottom=0.2, wspace=0.4)  # Space for sliders and between plots
 
     # Initial plot for `show_qhd`
@@ -57,12 +69,27 @@ def show_side_by_side():
     ax_sgd.set_ylabel("Y-axis")
     ax_sgd.set_zlabel("Density")
 
+    # Initial plot for `show_lfmsgd`
+    k_index_lfmsgd = 0
+    points_lfmsgd = dist_lfmsgd[k_index_lfmsgd]
+    kde_lfmsgd = gaussian_kde(points_lfmsgd.T)
+    z_lfmsgd = kde_lfmsgd(positions_lfmsgd).reshape(grid_size, grid_size)
+    surface_lfmsgd = ax_lfmsgd.plot_surface(x_lfmsgd, y_lfmsgd, z_lfmsgd, cmap='viridis')
+    ax_lfmsgd.set_zlim(0, z_lfmsgd.max() * 1.1)
+    ax_lfmsgd.set_title(f"LFM-SGD Distribution for k={k_index_lfmsgd}")
+    ax_lfmsgd.set_xlabel("X-axis")
+    ax_lfmsgd.set_ylabel("Y-axis")
+    ax_lfmsgd.set_zlabel("Density")
+
     # Sliders
-    ax_slider_qhd = plt.axes([0.15, 0.05, 0.3, 0.03], facecolor='lightgoldenrodyellow')
+    ax_slider_qhd = plt.axes([0.1, 0.05, 0.2, 0.03], facecolor='lightgoldenrodyellow')
     slider_qhd = Slider(ax_slider_qhd, 'QHD k', 0, k_total_qhd - 1, valinit=k_index_qhd, valstep=1)
 
-    ax_slider_sgd = plt.axes([0.55, 0.05, 0.3, 0.03], facecolor='lightgoldenrodyellow')
+    ax_slider_sgd = plt.axes([0.4, 0.05, 0.2, 0.03], facecolor='lightgoldenrodyellow')
     slider_sgd = Slider(ax_slider_sgd, 'SGD k', 0, k_total_sgd - 1, valinit=k_index_sgd, valstep=1)
+
+    ax_slider_lfmsgd = plt.axes([0.7, 0.05, 0.2, 0.03], facecolor='lightgoldenrodyellow')
+    slider_lfmsgd = Slider(ax_slider_lfmsgd, 'LFM-SGD k', 0, k_total_lfmsgd - 1, valinit=k_index_lfmsgd, valstep=1)
 
     # Update functions
     def update_qhd(val):
@@ -89,8 +116,22 @@ def show_side_by_side():
         ax_sgd.set_title(f"SGD Distribution for k={k_index_sgd}")
         fig.canvas.draw_idle()
 
+    def update_lfmsgd(val):
+        nonlocal surface_lfmsgd
+        k_index_lfmsgd = int(slider_lfmsgd.val)
+        points_lfmsgd = dist_lfmsgd[k_index_lfmsgd] + np.random.normal(0, 1e-2, dist_lfmsgd[k_index_lfmsgd].shape)
+        kde_lfmsgd = gaussian_kde(points_lfmsgd.T)
+        z_lfmsgd = kde_lfmsgd(positions_lfmsgd).reshape(grid_size, grid_size)
+        for collection in ax_lfmsgd.collections:
+            collection.remove()
+        surface_lfmsgd = ax_lfmsgd.plot_surface(x_lfmsgd, y_lfmsgd, z_lfmsgd, cmap='viridis')
+        ax_lfmsgd.set_zlim(0, z_lfmsgd.max() * 1.1)
+        ax_lfmsgd.set_title(f"LFM-SGD Distribution for k={k_index_lfmsgd}")
+        fig.canvas.draw_idle()
+
     slider_qhd.on_changed(update_qhd)
     slider_sgd.on_changed(update_sgd)
+    slider_lfmsgd.on_changed(update_lfmsgd)
 
     plt.show()
 

@@ -173,13 +173,14 @@ void lfmsgd(const double L, const int dim, const int tot_steps,
     */
 
     const int num = sample_number;
-    int prog, prog_prev;
+    int prog, prog_prev, index;
     int v[dim];
     double x_init[num][dim], x[num][dim], x_new[num][dim], temp[dim], m[num][dim], m_new[num][dim], m2_sum[num], mu[num];
     double expected_pot, time_st, time_ed, thr, eta, temp_val;
     double pot[tot_steps], prob_at_min[tot_steps];
     double cur_pot[num];
     static double gaussian_pool[n_pool];
+    double dist_snapshot[n_snapshot * num * dim];
 
     /* randomness preparation */
     default_random_engine gen;
@@ -271,6 +272,16 @@ void lfmsgd(const double L, const int dim, const int tot_steps,
             thr = thr_frac * compute_potential(cur_pot, num, 1);
         }
         prob_at_min[step] = prob_at_minimum(cur_pot, num, thr, par);
+
+        /* write into snapshot */
+        if ((step * n_snapshot) % tot_steps < n_snapshot) {
+            index = (step * n_snapshot) / tot_steps;
+            for (int id = 0; id < num; id++) {
+                for (int i = 0; i < dim; i++) {
+                    dist_snapshot[index * num * dim + id * dim + i] = x[id][i];
+                }
+            }
+        }
     }
 
     /* timing */
@@ -288,6 +299,7 @@ void lfmsgd(const double L, const int dim, const int tot_steps,
     npz_save("../result/lfmsgd.npz", "par", &par, {1}, "a");
     npz_save("../result/lfmsgd.npz", "sample_number", &sample_number, {1}, "a");
     npz_save("../result/lfmsgd.npz", "samples", cur_pot, {(unsigned int) sample_number}, "a");
+    npz_save("../result/lfmsgd.npz", "dist_snapshot", dist_snapshot, {(unsigned int)(n_snapshot * num * dim)}, "a");
 }
 
 int main(int argc, char **argv)
