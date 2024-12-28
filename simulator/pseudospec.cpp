@@ -125,7 +125,9 @@ void load_potential_to_array(double *V, const int len, const double L, const int
         int_to_coord(i, v, dim, len);
         for (int j = 0; j < dim; j++) {
             /* map [0, len) to [-L, L) */
-            x[j] = (double) v[j] * stepsize - L + offset[j];
+            //x[j] = (double) v[j] * stepsize - L + offset[j];
+            /* disable pinned */
+            x[j] = (double) v[j] * stepsize - L;
         }
         V[i] = get_potential(x, L);
     }

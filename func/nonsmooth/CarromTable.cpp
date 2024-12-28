@@ -39,5 +39,12 @@ void get_obj_subg(const double *x, double *ret) {
                     (1.0/15.0)*exp(2*(-1+sqrt(x1*x1 + x2*x2)/pi))*sin(x1)*cos(x1)*cos(x2)*cos(x2);
         ret[1] = -x2*exp(2*(-1+sqrt(x2*x2 + x1*x1)/pi))*cos(x2)*cos(x2)*cos(x1)*cos(x1) / (15*pi*sqrt(x2*x2 + x1*x1)) + 
                     (1.0/15.0)*exp(2*(-1+sqrt(x2*x2 + x1*x1)/pi))*sin(x2)*cos(x2)*cos(x1)*cos(x1);
-    } 
+    }
+
+    if (!isfinite(ret[0])) {
+        ret[0] = 0;
+    }
+    if (!isfinite(ret[1])) {
+        ret[1] = 0;
+    }
 }
