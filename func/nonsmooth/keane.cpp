@@ -19,7 +19,7 @@ double get_obj(const double *x) {
     double part0 = pow(cos(x1), 2)*pow(cos(x2), 2);
     double part1 = fabs(pow(cos(x1), 4)+pow(cos(x2), 4) - 2.0*part0);
     double part2 = sqrt(pow(x1, 2) + 2*pow(x2, 2));
-    return -part1/part2 + 0.673207;
+    return -part1/part2 + 0.673668;
 }
 
 void get_obj_subg(const double *x, double *ret) {

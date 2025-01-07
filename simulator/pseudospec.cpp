@@ -410,7 +410,7 @@ int main(int argc, char **argv)
     const int size = pow(len, dim);
     double V[size];
     load_potential_to_array(V, len, L, dim);
-    printf("Post-Discretization Minimum: %f\n", get_minimum(V, size));
+    printf("Post-Discretization Minimum: %.20f\n", get_minimum(V, size));
 
     printf("L=%f, len=%d\n", L, len);
     printf("T=%f, dt=%f\n", T, dt);
