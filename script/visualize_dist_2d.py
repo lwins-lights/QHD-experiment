@@ -106,7 +106,7 @@ def show_side_by_side():
     def update_sgd(val):
         nonlocal surface_sgd
         k_index_sgd = int(slider_sgd.val)
-        points_sgd = dist_sgd[k_index_sgd] + np.random.normal(0, 1e-2, dist_sgd[k_index_sgd].shape)
+        points_sgd = dist_sgd[k_index_sgd] #+ np.random.normal(0, 1e-2, dist_sgd[k_index_sgd].shape)
         kde_sgd = gaussian_kde(points_sgd.T)
         z_sgd = kde_sgd(positions_sgd).reshape(grid_size, grid_size)
         for collection in ax_sgd.collections:
@@ -119,7 +119,7 @@ def show_side_by_side():
     def update_lfmsgd(val):
         nonlocal surface_lfmsgd
         k_index_lfmsgd = int(slider_lfmsgd.val)
-        points_lfmsgd = dist_lfmsgd[k_index_lfmsgd] + np.random.normal(0, 1e-2, dist_lfmsgd[k_index_lfmsgd].shape)
+        points_lfmsgd = dist_lfmsgd[k_index_lfmsgd] #+ np.random.normal(0, 1e-2, dist_lfmsgd[k_index_lfmsgd].shape)
         kde_lfmsgd = gaussian_kde(points_lfmsgd.T)
         z_lfmsgd = kde_lfmsgd(positions_lfmsgd).reshape(grid_size, grid_size)
         for collection in ax_lfmsgd.collections:
