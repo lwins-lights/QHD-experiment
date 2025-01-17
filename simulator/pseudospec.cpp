@@ -364,7 +364,7 @@ void pseudospec(const int dim, const int len, const double L, const double T,
         prob_at_min[step] = prob_at_minimum(psi, V, size, thr, par);
 
         /* write into snapshot */
-        if ((step * n_snapshot) % num_steps < n_snapshot) {
+        if (((step + 1) * n_snapshot) % num_steps < n_snapshot) {
             index = (step * n_snapshot) / num_steps;
             //printf("[DEBUG] Snapshot %d\n", index);
             compile_distribution(psi, size, dist_snapshot + (index * size));
