@@ -1,99 +1,63 @@
-# importing the required module
-import sys, getopt
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 import numpy as np
-import argparse
+from util import *
 
-# get default dpi
-dpi = mpl.rcParams['figure.dpi']
+# path init
+this_path = os.path.dirname(os.path.realpath(__file__)) 
+root_path = os.path.join(this_path, '..')
+result_path = os.path.join(root_path, "result")
 
-# load data
-qhd_res = np.load('./result/pseudospec.npz')
+def generate_figure(figpath=os.path.join(result_path, "landscape.png")):
 
-len = qhd_res['len'][0]
-V = qhd_res['V']
-L = qhd_res['L']
-num = len * len
-surface_x = np.empty(shape=(len,len))
-surface_y = np.empty(shape=(len,len))
-surface_z = np.empty(shape=(len,len))
+    # Load data
+    qhd_res = np.load('./result/pseudospec.npz')
+    grid_size = qhd_res['len'][0]  # Avoid using `len` as a variable name
+    L = qhd_res['L']
+    V = qhd_res['V']
 
-for i0 in range(len):
-    for i1 in range(len):
-        l = i0 + i1 * len
-        surface_x[i0, i1] = float(i0) / len * 2 * L - L
-        surface_y[i0, i1] = float(i1) / len * 2 * L - L
-        surface_z[i0, i1] = V[l]
+    # Create coordinate grid
+    x = np.linspace(-L, L, grid_size)
+    y = np.linspace(-L, L, grid_size)
+    surface_x, surface_y = np.meshgrid(x, y)
+    surface_z = V.reshape((grid_size, grid_size))  # Ensure correct reshaping
 
-# subplots
-#f, (s_plt) = plt.subplots(1, 1, figsize=(800/dpi, 900/dpi))
+    # Find the global minimum
+    min_idx = np.unravel_index(np.argmin(surface_z), surface_z.shape)
+    min_x, min_y = x[min_idx[1]], y[min_idx[0]]  # Ensure correct coordinate selection
 
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-ax.plot_surface(surface_x, surface_y, surface_z, cmap='viridis')
- 
-ax.set_title('3D Surface plot')
-ax.set_xlabel('x1')
-ax.set_ylabel('x2')
-ax.set_zlabel('obj')
-plt.show()
+    # Create figure with two subplots: 3D surface and 2D heatmap
+    fig, axs = plt.subplots(1, 2, figsize=(11, 5))
+    fig.subplots_adjust(wspace=0.2)  # Adjust spacing
 
-'''
-y_qhd = qhd_res['expected_potential']
-y_subgrad = subgrad_res['expected_potential']
-y_lfmsgd = lfmsgd_res['expected_potential']
+    # Remove unnecessary axis ticks and labels
+    axs[0].axis('off')
 
-yp_qhd = qhd_res['probability_at_minimum']
-yp_subgrad = subgrad_res['probability_at_minimum']
-yp_lfmsgd = lfmsgd_res['probability_at_minimum']
+    # 3D Surface Plot
+    ax1 = fig.add_subplot(121, projection='3d')
+    surf = ax1.plot_surface(surface_x, surface_y, surface_z, cmap='jet', rstride=1, cstride=1)
+    #ax1.set_title('3D Surface Plot')
+    ax1.set_xlabel('$x_1$')
+    ax1.set_ylabel('$x_2$')
+    ax1.set_zticks([])
+    #fig.colorbar(surf, ax=ax1, shrink=0.5, aspect=10)  # Add color bar
 
-T = qhd_res['T'][0]
-dt = qhd_res['dt'][0]
-len = qhd_res['len'][0]
-dim = qhd_res['dim'][0]
-L = qhd_res['L'][0]
-tot_steps = subgrad_res['tot_steps'][0]
-learning_rate = subgrad_res['learning_rate'][0]
-sample_number = subgrad_res['sample_number'][0]
-noise_level = lfmsgd_res['noise_level'][0]
+    # 2D Heatmap (Square aspect ratio)
+    ax2 = axs[1]
+    heatmap = ax2.imshow(surface_z, extent=[x.min(), x.max(), y.min(), y.max()], origin='lower', cmap='jet', aspect='equal')
+    #ax2.set_title('2D Heatmap')
+    ax2.set_xlabel('$x_1$')
+    ax2.set_ylabel('$x_2$')
 
-# init x
-x_qhd = np.arange(0, T, dt)
-x_subgrad = np.arange(0, T, T / tot_steps)
+    fig.colorbar(heatmap, ax=ax2, shrink=0.5, aspect=10)
 
-# subplots
-f, (e_plt, p_plt) = plt.subplots(2, 1, figsize=(800/dpi, 900/dpi))
-  
-# plotting for expected potential
-e_plt.plot(x_qhd, y_qhd, label="QHD*" + str(qhd_res['par'][0]))
-e_plt.plot(x_subgrad, y_subgrad, label="SUBGRAD*" + str(subgrad_res['par'][0]))
-e_plt.plot(x_subgrad, y_lfmsgd, label="LFMSGD*" + str(lfmsgd_res['par'][0]))
-  
-e_plt.set_xlabel('time')
-e_plt.set_ylabel('expectation')
+    # Mark global minimum
+    ax2.scatter(min_x, min_y, color='white', marker='x', s=100, label='Global Minimum')
+    legend = ax2.legend()
+    legend.get_frame().set_facecolor('gray')
 
-# plotting for probability at minimum
-p_plt.plot(x_qhd, yp_qhd, label="QHD*" + str(qhd_res['par'][0]))
-p_plt.plot(x_subgrad, yp_subgrad, label="SUBGRAD*" + str(subgrad_res['par'][0]))
-p_plt.plot(x_subgrad, yp_lfmsgd, label="LFMSGD*" + str(subgrad_res['par'][0]))
-  
-p_plt.set_xlabel('time')
-p_plt.set_ylabel('success probability')
-  
-# style
-e_plt.yaxis.tick_right()
-p_plt.yaxis.tick_right()
-e_plt.legend(loc="upper right")
-p_plt.legend(loc="lower right")
+    plt.savefig(figpath)
 
-# show all
-qhd_params = 'QHD params: dt=%f; gran.=%f^%d; L=%f' % (dt, len, dim, L)
-subgrad_params = '\nSUBGRAD params: tot_steps=%d; learning_rate=%f; sample_number=%d' % (tot_steps, learning_rate, sample_number)
-lfmsgd_params = '\nLFMSGD params: noise_level=%f' % (noise_level)
-f.suptitle(qhd_params + subgrad_params + lfmsgd_params)
-#f.suptitle('dt = ' + str(dt) + "; gran. = " + str(len) + "^" + str(dim) + ";\n tot_steps = " + str(tot_steps) + "; learning_rate = " + str(learning_rate) + "; sample_number = " + str(sample_number) + "; noise_level = " + str(noise_level))
-plt.savefig(args.output)
-if not args.silent:
-    plt.show()
-'''
+if __name__ == '__main__':
+    fpath = 'func/nonsmooth/xinsheyang04_nobarrier.cpp'
+    run_qhd(fpath, L=10, resol=512, T=1, dt=1)
+    generate_figure()

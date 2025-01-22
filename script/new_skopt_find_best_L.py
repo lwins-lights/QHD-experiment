@@ -79,7 +79,8 @@ def optimize_L(
     qhd_L_bounds=(0.01, 100), subgrad_L_bounds=(0.001, 1000), lfmsgd_L_bounds=(0.001, 1000), mini_L_bounds=(1, 1e6),
     qhd_resol=256, subgrad_n_samples=10000, lfmsgd_n_samples=10000, mini_n_samples=100000,
     qhd_T=10, qhd_dt=0.001, subgrad_tot_steps=10000, lfmsgd_tot_steps=10000, mini_steps=1000,
-    k=1, n_calls=50
+    k=1, n_calls=50,
+    qhd_L=0
 ):
 
     def use_gp_minimize(f, L_bounds, L_name, gap_name, results):
@@ -88,6 +89,10 @@ def optimize_L(
         optimize_result = gp_minimize(f, search_space, n_calls=n_calls, random_state=0)
         results[L_name] = optimize_result.x[0]
         results[gap_name] = optimize_result.fun
+
+    def direct_optimize(f, L, L_name, gap_name, results):
+        results[L_name] = L
+        results[gap_name] = f([L])
 
     results={"func":fpath, "k":k}
 
@@ -105,7 +110,10 @@ def optimize_L(
             result = run_qhd(fpath, L=L, resol=qhd_resol, T=qhd_T, dt=qhd_dt)
             output = result['output']
             return lower_precision(best_in_k(output, k))
-        use_gp_minimize(f, qhd_L_bounds, "qhd_L", "qhd_gap", results)
+        if qhd_L == 0:
+            use_gp_minimize(f, qhd_L_bounds, "qhd_L", "qhd_gap", results)
+        else:
+            direct_optimize(f, qhd_L, "qhd_L", "qhd_gap", results)
 
     if optimize_subgrad:
         def f(vars):
@@ -128,23 +136,31 @@ def optimize_L(
 if __name__ == '__main__':
     np.random.seed(0)
     func_dim_list = [
-        ('func/nonsmooth/Schwefel.cpp', 1),
-        ('func/nonsmooth/keane.cpp', 2),
-        ('func/nonsmooth/WF.cpp', 2),
-        ('func/nonsmooth/CrownedCross.cpp', 2),
-        ('func/nonsmooth/bukin06.cpp', 2),
-        ('func/nonsmooth/Ackley.cpp', 2),
-        ('func/nonsmooth/xinsheyang04.cpp', 2),
-        ('func/nonsmooth/CarromTable.cpp', 2),
-        ('func/nonsmooth/rana.cpp', 2),
-        ('func/nonsmooth/Damavandi.cpp', 2),
-        ('func/nonsmooth/DropWave_3d.cpp', 3),
-        ('func/nonsmooth/layeb04_3d.cpp', 3)
+        ('func/nonsmooth/Schwefel.cpp', 1, 1.47250929702301),
+        ('func/nonsmooth/keane.cpp', 2, 0.251405304286405),
+        ('func/nonsmooth/WF.cpp', 2, 5.59148287989168),
+        ('func/nonsmooth/CrownedCross.cpp', 2, 1.20100312295498),
+        ('func/nonsmooth/bukin06.cpp', 2, 7.35173280432231),
+        ('func/nonsmooth/Ackley.cpp', 2, 1.80021533922279),
+        ('func/nonsmooth/xinsheyang04.cpp', 2, 0.526387551268728),
+        ('func/nonsmooth/CarromTable.cpp', 2, 0.815342466034414),
+        ('func/nonsmooth/rana.cpp', 2, 4.25752814528056),
+        ('func/nonsmooth/Damavandi.cpp', 2, 4.55998485143467),
+        ('func/nonsmooth/DropWave_3d.cpp', 3, 0.316167168089332),
+        ('func/nonsmooth/layeb04_3d.cpp', 3, 1.69324811265117)
     ]
-    resol = [0, 65536, 256, 64]
-    for fpath, dim in func_dim_list:
-        results = optimize_L(fpath, qhd_resol=resol[dim], n_calls=100, k=1)
+    resol = [0, pow(int(2),18), pow(int(2),9), pow(int(2),6)]
+    test_name = "Regular Test v2.1"
+    '''
+    for fpath, dim, L in func_dim_list:
+        results = optimize_L(fpath, qhd_resol=resol[dim], n_calls=100, k=30)
         results["name"] = "Regular Test v2.0"
+        save_dict_to_csv_row(results, data_file_path)
+    '''
+
+    for fpath, dim, L in func_dim_list:
+        qhd_min = get_qhd_minimum(fpath, resol=resol[dim])
+        results = {"name":test_name, "qhd_min":qhd_min, "func":fpath}
         save_dict_to_csv_row(results, data_file_path)
 
     #for fpath in func_list:

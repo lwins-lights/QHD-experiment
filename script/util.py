@@ -2,7 +2,8 @@ import os
 import numpy as np
 import filecmp
 import shutil
-from subprocess import run
+from subprocess import run, PIPE, Popen
+import re
 
 # constant
 verbose = False
@@ -14,9 +15,9 @@ result_path = os.path.join(root_path, "result")
 simulator_path = os.path.join(root_path, "simulator")
 potential_path = os.path.join(simulator_path, "potential.cpp")
 
-def vprint(*params):
+def vprint(*params, **kwargs):
     if verbose:
-        print(*params)
+        print(*params, **kwargs)
 
 def copy_if_different(file_a, file_b):
     try:
@@ -28,6 +29,28 @@ def copy_if_different(file_a, file_b):
             vprint(f"Files '{file_a}' and '{file_b}' are identical. No copy needed.")
     except FileNotFoundError as e:
         vprint(f"Error: {e}")
+
+def get_qhd_minimum(func_path, resol=256, T=10, dt=0.001, par=1, L=1):
+
+    # compile QHD
+    run(["mkdir", "-p", result_path])
+    copy_if_different(func_path, potential_path)
+    run(["make", "pseudospec"], cwd=simulator_path)
+
+    # run the simulator (async)
+    arglist = ["./pseudospec", str(int(resol)), str(T), str(dt), str(int(par)), str(L)]
+    process = Popen(arglist, stdout=PIPE, stderr=PIPE, text=True, cwd=simulator_path)
+
+    # handle real-time output
+    vprint("Caught output: ")
+    for line in process.stdout:
+        vprint(line, end='')
+        matching = re.search(r"Post-Discretization Minimum:\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)", line)
+        if matching:
+            process.kill()
+            return float(matching.group(1))
+    
+    raise RuntimeError("Post-Discretization Minimum not found!")     
 
 def run_qhd(func_path, resol=256, T=10, dt=0.001, par=1, L=1):
 

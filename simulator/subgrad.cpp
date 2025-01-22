@@ -250,7 +250,7 @@ void subgrad(const double L, const int dim, const int tot_steps,
         prob_at_min[step] = prob_at_minimum(cur_pot, num, thr, par);
 
         /* write into snapshot */
-        if ((step * n_snapshot) % tot_steps < n_snapshot) {
+        if (((step + 1) * n_snapshot) % tot_steps < n_snapshot) {
             index = (step * n_snapshot) / tot_steps;
             for (int id = 0; id < num; id++) {
                 for (int i = 0; i < dim; i++) {
