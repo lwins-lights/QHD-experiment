@@ -41,6 +41,12 @@ def generate_figure(figpath=os.path.join(result_path, "landscape.png")):
     ax1.set_zticks([])
     #fig.colorbar(surf, ax=ax1, shrink=0.5, aspect=10)  # Add color bar
 
+    ax1.view_init(elev=15, azim=-60)
+
+    # Reduce ticks for x_1 and x_2 axes
+    ax1.set_xticks(np.linspace(x.min(), x.max(), 5))  # Reduce x_1 ticks (e.g., 5 ticks)
+    ax1.set_yticks(np.linspace(y.min(), y.max(), 5))  # Reduce x_2 ticks (e.g., 5 ticks)
+
     # 2D Heatmap (Square aspect ratio)
     ax2 = axs[1]
     heatmap = ax2.imshow(surface_z, extent=[x.min(), x.max(), y.min(), y.max()], origin='lower', cmap='jet', aspect='equal')
@@ -59,5 +65,5 @@ def generate_figure(figpath=os.path.join(result_path, "landscape.png")):
 
 if __name__ == '__main__':
     fpath = 'func/nonsmooth/xinsheyang04_nobarrier.cpp'
-    run_qhd(fpath, L=10, resol=512, T=1, dt=1)
+    #run_qhd(fpath, L=10, resol=512, T=1, dt=1)
     generate_figure()
