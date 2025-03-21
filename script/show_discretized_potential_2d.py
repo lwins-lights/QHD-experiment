@@ -65,5 +65,5 @@ def generate_figure(figpath=os.path.join(result_path, "landscape.png")):
 
 if __name__ == '__main__':
     fpath = 'func/nonsmooth/xinsheyang04_nobarrier.cpp'
-    #run_qhd(fpath, L=10, resol=512, T=1, dt=1)
+    run_qhd(fpath, L=10, resol=512, T=1, dt=1)
     generate_figure()

@@ -150,27 +150,16 @@ if __name__ == '__main__':
         ('func/nonsmooth/layeb04_3d.cpp', 3, 1.69324811265117)
     ]
     resol = [0, pow(int(2),18), pow(int(2),9), pow(int(2),6)]
-    test_name = "Regular Test v2.1"
-    '''
-    for fpath, dim, L in func_dim_list:
-        results = optimize_L(fpath, qhd_resol=resol[dim], n_calls=100, k=30)
-        results["name"] = "Regular Test v2.0"
-        save_dict_to_csv_row(results, data_file_path)
-    '''
+    test_name = "Regular Test"
+    
+    for k in [1, 3, 10, 30, 100]:
+        for fpath, dim, L in func_dim_list:
+            results = optimize_L(fpath, qhd_resol=resol[dim], n_calls=100, k=k)
+            results["name"] = test_name
+            save_dict_to_csv_row(results, data_file_path)
 
     for fpath, dim, L in func_dim_list:
         qhd_min = get_qhd_minimum(fpath, resol=resol[dim])
         results = {"name":test_name, "qhd_min":qhd_min, "func":fpath}
         save_dict_to_csv_row(results, data_file_path)
 
-    #for fpath in func_list:
-    #    results = optimize_L(fpath, optimize_qhd=False, optimize_subgrad=False, optimize_lfmsgd=False, optimize_mini=True)
-    #    results["name"] = "Minimum Benchmark"
-    #    save_dict_to_csv_row(results, data_file_path)
-
-    #fpath = 'func/nonsmooth/keane.cpp'
-    #results = optimize_L(fpath, qhd_resol=512, subgrad_n_samples=10000, lfmsgd_n_samples=10000, n_calls=50, k=10)
-    #results = optimize_L(fpath, optimize_qhd=False, optimize_subgrad=False, optimize_lfmsgd=False, optimize_mini=True)
-    #results["name"] = "min benchmark"
-    #print(results)
-    #save_dict_to_csv_row(results, data_file_path)

@@ -29,6 +29,10 @@ def copy_if_different(file_a, file_b):
             vprint(f"Files '{file_a}' and '{file_b}' are identical. No copy needed.")
     except FileNotFoundError as e:
         vprint(f"Error: {e}")
+        try:
+            shutil.copyfile(file_a, file_b)
+        except FileNotFoundError as e:
+            vprint(f"Error: {e}")
 
 def get_qhd_minimum(func_path, resol=256, T=10, dt=0.001, par=1, L=1):
 

@@ -13,6 +13,10 @@
 
 result/
 
+# Unignore the .gitkeep file to maintain the folder
+
+!result/.gitkeep
+
 # Ignore the copied potential.cpp
 
 simulator/potential.cpp
